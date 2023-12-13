@@ -38,7 +38,7 @@
         };
 
         # Add simple wi-fi connection helper
-        environment.systemPackages = lib.mkIf config.ghaf.profiles.debug.enable [pkgs.wifi-connector];
+        environment.systemPackages = lib.mkIf config.ghaf.profiles.debug.enable [pkgs.wifi-connector pkgs.element-packet-forwarder pkgs.dendrite];
 
         # Dnsmasq is used as a DHCP/DNS server inside the NetVM
         services.dnsmasq = {
