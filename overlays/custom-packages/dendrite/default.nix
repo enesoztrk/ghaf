@@ -9,8 +9,9 @@
     rev = "v0.9.1";
     hash = "sha256-Hy3QuwAHmZSsjy5A/1mrmrxdtle466HsQtDat3tYS8s=";
   };
+      patches = [./turnserver-crendentials-flags.patch];
+
     subPackages = ["cmd/dendrite-demo-pinecone"];
 
-    patches = [./0001-flags-for-turnserver-credentials-are-added.patch];
   });
 })

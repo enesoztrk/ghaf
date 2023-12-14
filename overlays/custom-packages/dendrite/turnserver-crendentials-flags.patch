@@ -1,0 +1,36 @@
+diff --git a/cmd/dendrite-demo-pinecone/main.go b/cmd/dendrite-demo-pinecone/main.go
+index 8fa935dd..12288fcc 100644
+--- a/cmd/dendrite-demo-pinecone/main.go
++++ b/cmd/dendrite-demo-pinecone/main.go
+@@ -61,6 +61,9 @@ var (
+ 	instancePort   = flag.Int("port", 8008, "the port that the client API will listen on")
+ 	instancePeer   = flag.String("peer", "", "the static Pinecone peers to connect to, comma separated-list")
+ 	instanceListen = flag.String("listen", ":0", "the port Pinecone peers can connect to")
++	instanceTurnServerUri = flag.String("turnserver-uri", "", "Turn server uri name")
++	instanceTurnServerSharedSecret = flag.String("turnserver-shared-secret", "", "Turn server shared secret")
++	instanceTurnServerUserLifetime = flag.String("turnserver-user-lifetime", "", "Turn server user lifetime")
+ )
+ 
+ // nolint:gocyclo
+@@ -125,6 +128,7 @@ func main() {
+ 			fmt.Println("Inbound connection", conn.RemoteAddr(), "is connected to port", port)
+ 		}
+ 	}()
++	logrus.Infof("WebRTC turn server URI: %s, user life time: %s", *instanceTurnServerUri,*instanceTurnServerUserLifetime)
+ 
+ 	cfg := &config.Dendrite{}
+ 	cfg.Defaults(true)
+@@ -142,6 +146,13 @@ func main() {
+ 	cfg.MSCs.MSCs = []string{"msc2836", "msc2946"}
+ 	cfg.ClientAPI.RegistrationDisabled = false
+ 	cfg.ClientAPI.OpenRegistrationWithoutVerificationEnabled = true
++	cfg.ClientAPI.TURN.UserLifetime=*instanceTurnServerUserLifetime
++	var turn_uri_udp="turn:" + *instanceTurnServerUri +"?transport=udp"
++	var turn_uri_tcp="turn:" + *instanceTurnServerUri +"?transport=tcp"
++
++	cfg.ClientAPI.TURN.URIs=[]string{turn_uri_udp,turn_uri_tcp}
++	cfg.ClientAPI.TURN.SharedSecret=*instanceTurnServerSharedSecret
++	//turnutils_uclient  turn.myserver.org -W north -v -y
+ 	if err := cfg.Derive(); err != nil {
+ 		panic(err)
+ 	}
