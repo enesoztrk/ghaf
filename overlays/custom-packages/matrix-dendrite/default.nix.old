@@ -6,10 +6,11 @@
     src = final.pkgs.fetchFromGitHub {
     owner = "matrix-org";
     repo = "dendrite";
-    rev = "a2bed259dd765bd0b9781cd65594343d22c07986";
-    hash = "sha256-Hy3QuwAHmZSsjy5A/1mrmrxdtle466HsQtDat3tYS8s=";
+    rev = "v";
+    hash = "sha256-Fg7yfP5cM/mNAsIZAI/WGNLuz8l3vxyY8bb1NjuZELc=";
   };
       patches = [./turnserver-crendentials-flags.patch];
+  version = "0.13.4";
 
     subPackages = ["cmd/dendrite-demo-pinecone"];
 
