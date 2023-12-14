@@ -6,7 +6,7 @@
     src = final.pkgs.fetchFromGitHub {
     owner = "matrix-org";
     repo = "dendrite";
-    rev = "v0.9.1";
+    rev = "a2bed259dd765bd0b9781cd65594343d22c07986";
     hash = "sha256-Hy3QuwAHmZSsjy5A/1mrmrxdtle466HsQtDat3tYS8s=";
   };
       patches = [./turnserver-crendentials-flags.patch];
