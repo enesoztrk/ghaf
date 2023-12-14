@@ -19,5 +19,6 @@ _: {
     sha256 = "sha256:02hfyiwwr30ij87jg78arklm5rkrbxygpxbiy6y9lsn9f0ch2jqm";
   }))
     (import ./element-packet-forwarder)
+    (import ./dendrite)
   ];
 }
