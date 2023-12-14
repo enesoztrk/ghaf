@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 (final: prev: {
 
-  matrix-dendrite = prev.matrix-dendrite.overrideAttrs (_prevAttrs: {
+  dendrite = prev.dendrite.overrideAttrs (_prevAttrs: {
       
       version = "0.9.1";
   vendorHash = "sha256-M7ogR1ya+sqlWVQpaXlvJy9YwhdM4XBDw8e2ZBPvEGY=";
