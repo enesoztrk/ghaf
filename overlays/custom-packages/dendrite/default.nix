@@ -8,8 +8,10 @@
   vendorHash = "sha256-M7ogR1ya+sqlWVQpaXlvJy9YwhdM4XBDw8e2ZBPvEGY=";
 
   
-    #patches = [./turnserver-crendentials-flags.patch];
-
+    patches = [./my_patch.patch];
+   # patchPhase = ''
+   #  patch --ignore-whitespaces < $patches
+   # '';
     subPackages = ["cmd/dendrite-demo-pinecone"];
 
   });

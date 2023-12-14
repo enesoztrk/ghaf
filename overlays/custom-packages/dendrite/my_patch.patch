@@ -1,17 +1,6 @@
-From 5bbb5ed0a0f5a56d8485497c768303f476ada39a Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Enes=20=C3=96zt=C3=BCrk?= <enes.ozturk@unikie.com>
-Date: Thu, 14 Dec 2023 13:30:36 +0200
-Subject: [PATCH] flags for turnserver credentials are added
-
----
- cmd/dendrite-demo-pinecone/main.go | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/cmd/dendrite-demo-pinecone/main.go b/cmd/dendrite-demo-pinecone/main.go
-index 8fa935dd..e70bcd3c 100644
---- a/cmd/dendrite-demo-pinecone/main.go
-+++ b/cmd/dendrite-demo-pinecone/main.go
-@@ -61,6 +61,9 @@ var (
+--- cmd/dendrite-demo-pinecone/main.go	2023-12-14 22:07:15.830119443 +0200
++++ cmd/dendrite-demo-pinecone/main_diff.go	2023-12-14 22:06:47.755980834 +0200
+@@ -61,6 +61,9 @@
  	instancePort   = flag.Int("port", 8008, "the port that the client API will listen on")
  	instancePeer   = flag.String("peer", "", "the static Pinecone peers to connect to, comma separated-list")
  	instanceListen = flag.String("listen", ":0", "the port Pinecone peers can connect to")
@@ -21,7 +10,7 @@ index 8fa935dd..e70bcd3c 100644
  )
  
  // nolint:gocyclo
-@@ -125,6 +128,10 @@ func main() {
+@@ -125,6 +128,10 @@
  			fmt.Println("Inbound connection", conn.RemoteAddr(), "is connected to port", port)
  		}
  	}()
@@ -32,7 +21,7 @@ index 8fa935dd..e70bcd3c 100644
  
  	cfg := &config.Dendrite{}
  	cfg.Defaults(true)
-@@ -142,6 +149,13 @@ func main() {
+@@ -142,6 +149,13 @@
  	cfg.MSCs.MSCs = []string{"msc2836", "msc2946"}
  	cfg.ClientAPI.RegistrationDisabled = false
  	cfg.ClientAPI.OpenRegistrationWithoutVerificationEnabled = true
@@ -46,6 +35,3 @@ index 8fa935dd..e70bcd3c 100644
  	if err := cfg.Derive(); err != nil {
  		panic(err)
  	}
--- 
-2.40.1
-
