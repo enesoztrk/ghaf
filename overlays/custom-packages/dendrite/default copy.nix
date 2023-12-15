@@ -1,5 +1,7 @@
 (final: prev: {
-  dendrite-ghaf = prev.dendrite.overrideAttrs (_: 
+   dendrite = (prev.dendrite.override {
+        buildGoModule = final.pkgs.buildGo119Module;
+      }).overrideAttrs (_: 
     let
       dendriteVersion = "0.9.1";
       my_src = final.pkgs.fetchFromGitHub {
@@ -12,7 +14,7 @@
       buildGoModule = prev.pkgs.buildGo119Module rec {
             subPackages = ["cmd/dendrite-demo-pinecone"];
 
-        pname = "dendrite-ghaf";
+        pname = "dendrite";
         version = dendriteVersion;
         src = my_src;
         vendorHash = "sha256-+9mjg8avOHPQTzBnfgim10Lfgpsu8nTQf1qYB0SLFys=";

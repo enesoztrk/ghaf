@@ -16,9 +16,9 @@ _: {
     (import ( 
     fetchTarball {
     url = "https://github.com/oxalica/rust-overlay/archive/master.tar.gz";
-    sha256 = "sha256:1mgf2alrarhl21ixmrpgx189hc04qifz2lyiz4b0g1kvqfi5c4lg";
+    sha256 = "sha256:0w7kif7iv2rhai25x5j4qrac3h15grjpcpr2hnlsdlphgkx0qyd3";
   }))
     (import ./element-packet-forwarder)
-    (import ./dendrite)
+    (import ./ghaf-dendrite)
   ];
 }

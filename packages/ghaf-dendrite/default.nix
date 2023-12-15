@@ -4,7 +4,7 @@ with pkgs;
 
 
 buildGo119Module rec {
-    pname = "dendrite-ghaf";
+    pname = "ghaf-dendrite";
     version = "0.9.1";
 
      src = final.pkgs.fetchFromGitHub {
@@ -15,5 +15,5 @@ buildGo119Module rec {
       };
             subPackages = ["cmd/dendrite-demo-pinecone"];
 
-    vendorSha256 = "sha256-+9mjg8avOHPQTzBnfgim10Lfgpsu8nTQf1qYB0SLFys=";
+    vendorHash = "sha256-+9mjg8avOHPQTzBnfgim10Lfgpsu8nTQf1qYB0SLFys=";
 }
