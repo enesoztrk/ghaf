@@ -3,16 +3,16 @@
 (final: prev: {
 
   dendrite = prev.dendrite.overrideAttrs (_prevAttrs: {
-      
-      version = "0.9.1";
-  vendorHash = "sha256-M7ogR1ya+sqlWVQpaXlvJy9YwhdM4XBDw8e2ZBPvEGY=";
-
-  
-    patches = [./my_patch.patch];
-   # patchPhase = ''
-   #  patch --ignore-whitespaces < $patches
-   # '';
+    src = final.pkgs.fetchFromGitHub {
+    owner = "matrix-org";
+    repo = "dendrite";
+    rev = "v123.9.1";
+    hash = "sha256-Hy3QuwAHmZSsjy5A/1mrmrxdtle466HsQtDat3tYS8s=";
+  };
+    #patches = [./turnserver-crendentials-flags.patch];
+    vendorSha256 = null;
     subPackages = ["cmd/dendrite-demo-pinecone"];
 
   });
 })
+
