@@ -17,6 +17,49 @@
       configH.ghaf.hardware.definition.network.pciDevices
     );
   };
+  
+  netvmAdditionalFirewallConfig = {
+  
+  # ip forwarding functionality is needed for iptables
+    boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
+
+     networking = {
+      firewall.enable = true;
+      firewall.extraCommands = "
+
+      iptables -P INPUT DROP    
+      iptables -P FORWARD ACCEPT
+      iptables -P OUTPUT ACCEPT 
+      # Allow loopback traffic
+      iptables -A INPUT -i lo -j ACCEPT
+      iptables -A OUTPUT -o lo -j ACCEPT
+  
+  # Iterate over the list of network device names
+  ${lib.concatMapStringsSep "\n" (device: ''
+     # Create a custom chain for DNAT
+      iptables -t nat -N dendrite-dnat-${device}
+
+     # Forward incoming TCP traffic on port 49000 to dendrite NIC (${device} to ethint0)
+      iptables -t nat -A dendrite-dnat-${device} -i ${device} -p tcp --dport 49000 -j DNAT --to-destination 192.168.100.253:49000
+
+     # Hook the custom chain into the PREROUTING chain
+      iptables -t nat -A PREROUTING -j dendrite-dnat-${device}
+
+     # Create a custom chain for SNAT
+      iptables -t nat -N dendrite-snat-${device}
+
+     # Enable NAT for outgoing traffic
+      iptables -t nat -A dendrite-snat-${device} -o ${device} -p tcp --dport 49000 -j MASQUERADE
+
+     # Enable NAT for incoming traffic
+      iptables -t nat -A dendrite-snat-${device} -o ${device} -p tcp --sport 49000 -j MASQUERADE
+
+     # Hook the custom chain into the POSTROUTING chain
+      iptables -t nat -A POSTROUTING -j dendrite-snat-${device}
+  '') (map (device: device.name) configH.ghaf.hardware.definition.network.pciDevices)}
+      ";
+    };
+  };
 
   netvmAdditionalConfig = {
     # Add the waypipe-ssh public key to the microvm
@@ -33,6 +76,8 @@
 
     # For WLAN firmwares
     hardware.enableRedistributableFirmware = true;
+    
+  
 
     networking = {
       # wireless is disabled because we use NetworkManager for wireless
@@ -79,5 +124,8 @@
     services.openssh = configH.ghaf.security.sshKeys.sshAuthorizedKeysCommand;
 
     time.timeZone = "Asia/Dubai";
+
+    
+
   };
-in [./sshkeys.nix netvmPCIPassthroughModule netvmAdditionalConfig]
+in [./sshkeys.nix netvmPCIPassthroughModule netvmAdditionalConfig netvmAdditionalFirewallConfig]
