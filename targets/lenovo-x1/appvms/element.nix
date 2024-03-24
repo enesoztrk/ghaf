@@ -1,15 +1,65 @@
-# Copyright 2024 TII (SSRC) and the Ghaf contributors
+# Copyright 2022-2024 TII (SSRC) and the Ghaf contributors
 # SPDX-License-Identifier: Apache-2.0
 #
-{pkgs, ...}: {
+{
+  pkgs,
+  config,
+  ...
+}: let
+  dendrite-pinecone = pkgs.callPackage ../../../packages/dendrite-pinecone {};
+in {
   name = "element";
-  packages = [pkgs.element-desktop pkgs.element-gps pkgs.gpsd];
-  #packages = [pkgs.element-desktop pkgs.gpsd pkgs.element-gps];
+
+  packages = [
+    pkgs.element-desktop
+    pkgs.element-gps
+    pkgs.gpsd
+    dendrite-pinecone
+    pkgs.tcpdump
+    pkgs.pulseaudio
+  ];
   macAddress = "02:00:00:03:08:01";
   ramMb = 4096;
-  cores = 1;
+  cores = 4;
   extraModules = [
     {
+      # Enable pulseaudio for user ghaf to access mic
+      security.rtkit.enable = true;
+      sound.enable = true;
+      hardware.pulseaudio.enable = true;
+      users.extraUsers.ghaf.extraGroups = ["audio" "video"];
+
+      hardware.pulseaudio.extraConfig = ''
+        load-module module-tunnel-sink sink_name=element-speaker server=audio-vm.ghaf:4713 format=s16le channels=2 rate=48000
+        load-module module-tunnel-source source_name=element-mic server=audio-vm.ghaf:4713 format=s16le channels=2 rate=48000
+        # Set sink and source default max volume to about 90% (0-65536)
+        set-sink-volume element-speaker 60000
+        set-source-volume element-mic 60000
+      '';
+
+      systemd.network = {
+        enable = true;
+        networks."10-ethint0" = {
+          DHCP = pkgs.lib.mkForce "no";
+          matchConfig.Name = "ethint0";
+          addresses = [
+            {
+              addressConfig.Address = "192.168.100.253/24";
+            }
+          ];
+          routes = [{routeConfig.Gateway = "192.168.100.1";}];
+          linkConfig.RequiredForOnline = "routable";
+          linkConfig.ActivationPolicy = "always-up";
+        };
+      };
+
+      networking = {
+        firewall.allowedTCPPorts = [dendrite-pinecone.TcpPortInt];
+        firewall.allowedUDPPorts = [dendrite-pinecone.McastUdpPortInt];
+      };
+
+      time.timeZone = "${config.time.timeZone}";
+
       services.gpsd = {
         enable = true;
         devices = ["/dev/ttyUSB0"];
@@ -31,26 +81,31 @@
         wantedBy = ["multi-user.target"];
       };
 
-      time.timeZone = "Asia/Dubai";
+      systemd.services."dendrite-pinecone" = {
+        description = "Dendrite is a second-generation Matrix homeserver with Pinecone which is a next-generation P2P overlay network";
+        enable = true;
+        serviceConfig = {
+          Type = "simple";
+          ExecStart = "${dendrite-pinecone}/bin/dendrite-demo-pinecone";
+          Restart = "on-failure";
+          RestartSec = "2";
+        };
+        wantedBy = ["multi-user.target"];
+      };
 
       microvm.qemu.extraArgs = [
+        # Note: If you want to enable integrated camera in element-vm,
+        # remove enabling camera line from chromium-vm
         # Lenovo X1 integrated usb webcam
         "-device"
         "qemu-xhci"
-        "-device"
-        "usb-host,vendorid=0x04f2,productid=0xb751"
+        # "-device"
+        # "usb-host,hostbus=3,hostport=8"
         # External USB GPS receiver
         "-device"
         "usb-host,vendorid=0x067b,productid=0x23a3"
-        # Connect sound device to hosts pulseaudio socket
-        "-audiodev"
-        "pa,id=pa1,server=unix:/run/pulse/native"
-        # Add HDA sound device to guest
-        "-device"
-        "intel-hda"
-        "-device"
-        "hda-duplex,audiodev=pa1"
       ];
     }
   ];
+  borderColor = "#337aff";
 }

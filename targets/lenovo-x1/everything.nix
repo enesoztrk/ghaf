@@ -102,7 +102,13 @@
               };
               virtualization.microvm.appvm = {
                 enable = true;
+<<<<<<< HEAD
                 vms = import ./appvms/default.nix {inherit pkgs config;};
+=======
+                vms = import ./appvms/default.nix {
+                  inherit pkgs config;
+                };
+>>>>>>> cf651f0 (Dendrite-pinecone for Ghaf)
               };
 
               # Enable all the default UI applications
