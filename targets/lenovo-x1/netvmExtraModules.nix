@@ -26,37 +26,26 @@
      networking = {
       firewall.enable = true;
       firewall.extraCommands = "
+        # Set the default policies
+          iptables -P INPUT DROP    
+          iptables -P FORWARD DROP
+          iptables -P OUTPUT ACCEPT 
 
-      iptables -P INPUT DROP    
-      iptables -P FORWARD ACCEPT
-      iptables -P OUTPUT ACCEPT 
-      # Allow loopback traffic
-      iptables -A INPUT -i lo -j ACCEPT
-      iptables -A OUTPUT -o lo -j ACCEPT
-  
-  # Iterate over the list of network device names
-  ${lib.concatMapStringsSep "\n" (device: ''
-     # Create a custom chain for DNAT
-      iptables -t nat -N dendrite-dnat-${device}
+        # Allow loopback traffic
+          iptables -A INPUT -i lo -j ACCEPT
+          iptables -A OUTPUT -o lo -j ACCEPT
 
-     # Forward incoming TCP traffic on port 49000 to dendrite NIC (${device} to ethint0)
-      iptables -t nat -A dendrite-dnat-${device} -i ${device} -p tcp --dport 49000 -j DNAT --to-destination 192.168.100.253:49000
+        # Forward incoming TCP traffic on port 49001 to Device C (enp0s3 to vboxnet0)
+          iptables -t nat -A PREROUTING -i wlp0s5f0 -p tcp --dport 49001 -j DNAT --to-destination  192.168.100.253:49001
 
-     # Hook the custom chain into the PREROUTING chain
-      iptables -t nat -A PREROUTING -j dendrite-dnat-${device}
+        # Enable NAT for outgoing traffic
+          iptables -t nat -A POSTROUTING -o wlp0s5f0 -p tcp --dport 49001 -j MASQUERADE
 
-     # Create a custom chain for SNAT
-      iptables -t nat -N dendrite-snat-${device}
+        # Enable NAT for outgoing traffic
+          iptables -t nat -A POSTROUTING -o wlp0s5f0 -p tcp --sport 49001 -j MASQUERADE
 
-     # Enable NAT for outgoing traffic
-      iptables -t nat -A dendrite-snat-${device} -o ${device} -p tcp --dport 49000 -j MASQUERADE
-
-     # Enable NAT for incoming traffic
-      iptables -t nat -A dendrite-snat-${device} -o ${device} -p tcp --sport 49000 -j MASQUERADE
-
-     # Hook the custom chain into the POSTROUTING chain
-      iptables -t nat -A POSTROUTING -j dendrite-snat-${device}
-  '') (map (device: device.name) configH.ghaf.hardware.definition.network.pciDevices)}
+        # Log accepted packets
+          iptables -A FORWARD -j ACCEPT
       ";
     };
   };
@@ -119,7 +108,7 @@
       config = configH;
     };
     # Add simple wi-fi connection helper
-    environment.systemPackages = lib.mkIf configH.ghaf.profiles.debug.enable [pkgs.wifi-connector-nmcli];
+    environment.systemPackages = lib.mkIf configH.ghaf.profiles.debug.enable [pkgs.wifi-connector-nmcli pkgs.tcpdump];
 
     services.openssh = configH.ghaf.security.sshKeys.sshAuthorizedKeysCommand;
 
