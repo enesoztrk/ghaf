@@ -40,8 +40,10 @@
       environment.systemPackages = [pkgs.smcroute];
      systemd.services."smcroute" = {
        description = "Static Multicast Routing daemon";
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
+     # after = [ "network-online.target" ];
+     # wants = [ "network-online.target" ];
+      bindsTo = ["sys-subsystem-net-devices-wlp0s5f0.device"];
+      after = ["sys-subsystem-net-devices-wlp0s5f0.device"];
       preStart = ''
       configContent=$(cat <<EOF
 mgroup from wlp0s5f0 group 239.0.0.114
@@ -60,6 +62,7 @@ touch $filePath
   serviceConfig = {
     Type = "simple";
     ExecStart = "${pkgs.smcroute}/sbin/smcrouted -n -s -f /etc/smcroute.conf";
+    #TODO sudo setcap cap_net_admin=ep ${pkgs.smcroute}/sbin/smcroute
     User = "root";
     # Automatically restart service when it exits.
     Restart = "always";

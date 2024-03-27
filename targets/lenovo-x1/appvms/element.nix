@@ -2,9 +2,11 @@
 let
   dendriteTcpPort = 49000;
   dendriteUdpPort = 60606;
+  dendrite-pinecone = pkgs.callPackage ../../../packages/dendrite-pinecone {};
 in{
   name = "element";
-  packages = [pkgs.dendrite pkgs.tcpdump pkgs.element-desktop];
+
+  packages = [dendrite-pinecone pkgs.tcpdump pkgs.element-desktop];
   macAddress = "02:00:00:03:08:01";
   ramMb = 3072;
   cores = 4;
@@ -30,7 +32,22 @@ in{
     firewall.allowedTCPPorts = [dendriteTcpPort];
     firewall.allowedUDPPorts = [dendriteUdpPort];
     };
-      time.timeZone = "Asia/Dubai";
+  
+    time.timeZone = "Asia/Dubai";
+
+    systemd.services."dendrite-pinecone" = {
+      description = "Dendrite is a second-generation Matrix homeserver with Pinecone which is a next-generation P2P overlay network";
+      enable = true;
+      serviceConfig = {
+        Type = "simple";
+        ExecStart = "${dendrite-pinecone}/bin/dendrite-demo-pinecone";
+        Restart = "on-failure";
+        RestartSec = "2";
+      };
+      wantedBy = ["multi-user.target"];
+    };
+
+	
     }
   ];
   borderColor = "#337aff";

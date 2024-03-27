@@ -10,11 +10,11 @@ buildGo119Module rec {
      src = pkgs.fetchFromGitHub {
         owner = "tiiuae";
         repo = "dendrite";
-        rev = "v0.9.1";
-        sha256 = "sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        rev = "feature/ghaf-integration";
+        sha256 = "sha256-UhA9deqWu3ERa08GMGV6/NVHEBZaAdPf7hXQb3GTRcA=";
       };
             subPackages = ["cmd/dendrite-demo-pinecone"];
          # patches = [./turnserver-crendentials-flags.patch];
 
-    vendorHash = "sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    vendorHash = "sha256-xMOd4N3hjajpNl9zxJnPrPIJjS292mFthpIQUHWqoYI=";
 }
