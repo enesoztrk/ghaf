@@ -1,10 +1,13 @@
-{pkgs, ...}: {
+{pkgs, ...}:
+let
+  dendriteTcpPort = 49000;
+  dendriteUdpPort = 60606;
+in{
   name = "element";
   packages = [pkgs.dendrite pkgs.tcpdump pkgs.element-desktop];
   macAddress = "02:00:00:03:08:01";
-  ramMb = 512;
-  cores = 1;
-    
+  ramMb = 3072;
+  cores = 4;
   extraModules = [
     {
       systemd.network = {
@@ -24,7 +27,8 @@
       };
 
     networking = {
-    firewall.allowedTCPPorts = [49001];
+    firewall.allowedTCPPorts = [dendriteTcpPort];
+    firewall.allowedUDPPorts = [dendriteUdpPort];
     };
       time.timeZone = "Asia/Dubai";
     }
