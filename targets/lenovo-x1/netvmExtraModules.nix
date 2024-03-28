@@ -17,14 +17,13 @@
       configH.ghaf.hardware.definition.network.pciDevices
     );
   };
-  
+
   netvmAdditionalFirewallConfig = {
-  
-  # ip forwarding functionality is needed for iptables
+    # ip forwarding functionality is needed for iptables
     boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
 
     # https://github.com/troglobit/smcroute?tab=readme-ov-file#linux-requirements
-     boot.kernelPatches = [
+    boot.kernelPatches = [
       {
         name = "multicast-routing-config";
         patch = null;
@@ -33,48 +32,46 @@
           IP_MROUTE = yes;
           IP_PIMSM_V1 = yes;
           IP_PIMSM_V2 = yes;
-          IP_MROUTE_MULTIPLE_TABLES = yes;       # For multiple routing tables  
+          IP_MROUTE_MULTIPLE_TABLES = yes; # For multiple routing tables
         };
-        }
-     ];
-      environment.systemPackages = [pkgs.smcroute];
-     systemd.services."smcroute" = {
-       description = "Static Multicast Routing daemon";
-     # after = [ "network-online.target" ];
-     # wants = [ "network-online.target" ];
+      }
+    ];
+    environment.systemPackages = [pkgs.smcroute];
+    systemd.services."smcroute" = {
+      description = "Static Multicast Routing daemon";
+      # after = [ "network-online.target" ];
+      # wants = [ "network-online.target" ];
       bindsTo = ["sys-subsystem-net-devices-wlp0s5f0.device"];
       after = ["sys-subsystem-net-devices-wlp0s5f0.device"];
       preStart = ''
-      configContent=$(cat <<EOF
-mgroup from wlp0s5f0 group 239.0.0.114
-mgroup from ethint0 group 239.0.0.114
-mroute from wlp0s5f0 group 239.0.0.114 to ethint0
-mroute from ethint0 group 239.0.0.114 to wlp0s5f0
-EOF
-)
-filePath="/etc/smcroute.conf"
-touch $filePath
-  chmod 200 $filePath
-  echo "$configContent" > $filePath
-  chmod 400 $filePath
-     '';
-  
-  serviceConfig = {
-    Type = "simple";
-    ExecStart = "${pkgs.smcroute}/sbin/smcrouted -n -s -f /etc/smcroute.conf";
-    #TODO sudo setcap cap_net_admin=ep ${pkgs.smcroute}/sbin/smcroute
-    User = "root";
-    # Automatically restart service when it exits.
-    Restart = "always";
-    # Wait a second before restarting.
-    RestartSec = "1s";
+              configContent=$(cat <<EOF
+        mgroup from wlp0s5f0 group 239.0.0.114
+        mgroup from ethint0 group 239.0.0.114
+        mroute from wlp0s5f0 group 239.0.0.114 to ethint0
+        mroute from ethint0 group 239.0.0.114 to wlp0s5f0
+        EOF
+        )
+        filePath="/etc/smcroute.conf"
+        touch $filePath
+          chmod 200 $filePath
+          echo "$configContent" > $filePath
+          chmod 400 $filePath
+      '';
 
-  };
-  wantedBy = [ "multi-user.target" ];   
-};
-    
+      serviceConfig = {
+        Type = "simple";
+        ExecStart = "${pkgs.smcroute}/sbin/smcrouted -n -s -f /etc/smcroute.conf";
+        #TODO sudo setcap cap_net_admin=ep ${pkgs.smcroute}/sbin/smcroute
+        User = "root";
+        # Automatically restart service when it exits.
+        Restart = "always";
+        # Wait a second before restarting.
+        RestartSec = "1s";
+      };
+      wantedBy = ["multi-user.target"];
+    };
 
-     networking = {
+    networking = {
       firewall.enable = true;
       firewall.extraCommands = "
         # TODO interface names,ip addresses should be defined by nix
@@ -126,8 +123,6 @@ touch $filePath
 
     # For WLAN firmwares
     hardware.enableRedistributableFirmware = true;
-    
-  
 
     networking = {
       # wireless is disabled because we use NetworkManager for wireless
@@ -174,8 +169,5 @@ touch $filePath
     services.openssh = configH.ghaf.security.sshKeys.sshAuthorizedKeysCommand;
 
     time.timeZone = "Asia/Dubai";
-
-    
-
   };
 in [./sshkeys.nix netvmPCIPassthroughModule netvmAdditionalConfig netvmAdditionalFirewallConfig]
