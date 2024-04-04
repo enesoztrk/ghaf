@@ -49,10 +49,10 @@ in {
         "-device"
         "hda-duplex,audiodev=pa1"
         # Lenovo X1 integrated usb webcam
-        "-device"
-        "qemu-xhci"
-        "-device"
-        "usb-host,hostbus=3,hostport=8"
+       # "-device"
+        #"qemu-xhci"
+       # "-device"
+       # "usb-host,hostbus=3,hostport=8"
       ];
       microvm.devices = [];
 

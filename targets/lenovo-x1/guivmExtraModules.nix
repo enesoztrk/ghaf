@@ -84,6 +84,11 @@
       }
 
       {
+        name = "element";
+        path = "${pkgs.openssh}/bin/ssh -i ${configH.ghaf.security.sshKeys.sshKeyPath} -o StrictHostKeyChecking=no 192.168.100.253 run-waypipe element-desktop --enable-features=UseOzonePlatform --ozone-platform=wayland";
+        icon = "${../../assets/icons/png/element.png}";
+      }
+      {
         name = "reboot";
         path = "${powerControl.makeRebootCommand {
           inherit hostAddress;
