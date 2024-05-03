@@ -61,6 +61,7 @@
             disko.devices.disk = config.ghaf.hardware.definition.disks;
 
             ghaf = {
+        
               hardware.definition = hwDefinition;
               # To enable guest hardening enable host hardening first
               host.kernel.hardening.enable = false;
@@ -85,6 +86,7 @@
               host.powercontrol.enable = true;
 
               virtualization.microvm.netvm = {
+             
                 enable = true;
                 extraModules = import ./netvmExtraModules.nix {
                   inherit lib pkgs microvm;

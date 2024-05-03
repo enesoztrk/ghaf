@@ -32,8 +32,11 @@
 
     dendrite-pinecone = import ../../packages/dendrite-pinecone/default.nix {inherit pkgs;};
     elemen-vmIp = "192.168.100.253";
+
   in {
-  
+   #   configH.dendrite-pinecone = true;
+
+  # boot.kernel.enes = 1;
     # DNS host record has been added for element-vm static ip
     services.dnsmasq.settings.host-record = "element-vm,element-vm.ghaf,${elemen-vmIp}";
   };
