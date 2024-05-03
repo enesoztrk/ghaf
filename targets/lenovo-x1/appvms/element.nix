@@ -29,13 +29,13 @@ in {
       hardware.pulseaudio.enable = true;
       users.extraUsers.ghaf.extraGroups = ["audio" "video"];
 
-      hardware.pulseaudio.extraConfig = ''
-        load-module module-tunnel-sink sink_name=element-speaker server=audio-vm.ghaf:4713 format=s16le channels=2 rate=48000
-        load-module module-tunnel-source source_name=element-mic server=audio-vm.ghaf:4713 format=s16le channels=2 rate=48000
-        # Set sink and source default max volume to about 90% (0-65536)
-        set-sink-volume element-speaker 60000
-        set-source-volume element-mic 60000
-      '';
+    #  hardware.pulseaudio.extraConfig = ''
+    #    load-module module-tunnel-sink sink_name=element-speaker server=audio-vm.ghaf:4713 format=s16le channels=2 rate=48000
+    #    load-module module-tunnel-source source_name=element-mic server=audio-vm.ghaf:4713 format=s16le channels=2 rate=48000
+    #    # Set sink and source default max volume to about 90% (0-65536)
+    #    set-sink-volume element-speaker 60000
+    #    set-source-volume element-mic 60000
+    #  '';
 
       systemd.network = {
         enable = true;
