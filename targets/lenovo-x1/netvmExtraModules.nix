@@ -30,13 +30,16 @@
       };
     in "${lib.head vmNetworking.networking.nat.internalInterfaces}";
 
-    dendrite-pinecone = import ../../packages/dendrite-pinecone/default.nix {inherit pkgs;};
     elemen-vmIp = "192.168.100.253";
 
   in {
    #   configH.dendrite-pinecone = true;
-
-  # boot.kernel.enes = 1;
+    ghaf.services.dendrite-pinecone = {
+      firewallConfig = true;
+      externalNic = "${externalNic}";
+      internalNic = "${internalNic}";
+      serverIpAddr = "${elemen-vmIp}";
+    };
     # DNS host record has been added for element-vm static ip
     services.dnsmasq.settings.host-record = "element-vm,element-vm.ghaf,${elemen-vmIp}";
   };
@@ -83,4 +86,4 @@
 
     time.timeZone = "Asia/Dubai";
   };
-in [netvmPCIPassthroughModule netvmAdditionalConfig]
+in [netvmPCIPassthroughModule netvmAdditionalConfig netvmAdditionalFirewallConfig]

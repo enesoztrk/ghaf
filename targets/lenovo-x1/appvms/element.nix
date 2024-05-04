@@ -7,6 +7,8 @@
   ...
 }: let
   dendrite-pinecone = pkgs.callPackage ../../../packages/dendrite-pinecone {};
+  isDendritePineconeEnabled = config.ghaf.services.dendrite-pinecone.enable;
+  ipAddr = "192.168.100.253";
 in {
   name = "element";
 
@@ -14,10 +16,9 @@ in {
     pkgs.element-desktop
     pkgs.element-gps
     pkgs.gpsd
-    dendrite-pinecone
     pkgs.tcpdump
     pkgs.pulseaudio
-  ];
+  ] ++ pkgs.lib.optionals (isDendritePineconeEnabled)[dendrite-pinecone];
   macAddress = "02:00:00:03:08:01";
   ramMb = 4096;
   cores = 4;
@@ -53,7 +54,7 @@ in {
         };
       };
 
-      networking = {
+      networking = pkgs.lib.mkIf (isDendritePineconeEnabled) {
         firewall.allowedTCPPorts = [dendrite-pinecone.TcpPortInt];
         firewall.allowedUDPPorts = [dendrite-pinecone.McastUdpPortInt];
       };
@@ -81,7 +82,7 @@ in {
         wantedBy = ["multi-user.target"];
       };
 
-      systemd.services."dendrite-pinecone" = {
+      systemd.services."dendrite-pinecone" = pkgs.lib.mkIf (isDendritePineconeEnabled) {
         description = "Dendrite is a second-generation Matrix homeserver with Pinecone which is a next-generation P2P overlay network";
         enable = true;
         serviceConfig = {

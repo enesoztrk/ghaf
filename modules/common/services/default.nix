@@ -2,6 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 {
   imports = [
-    ./dendrite-pinecone-config.nix
+    ./dendrite-pinecone.nix
   ];
 }
