@@ -85,7 +85,7 @@
               host.networking.enable = true;
               host.powercontrol.enable = true;
               # dendrite-pinecone service is enabled
-              services.dendrite-pinecone.enable = false;
+              services.dendrite-pinecone.enable = true;
               virtualization.microvm.netvm = {
              
                 enable = true;
