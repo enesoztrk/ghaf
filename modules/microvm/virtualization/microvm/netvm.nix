@@ -11,8 +11,6 @@
   macAddress = "02:00:00:01:01:01";
 
   isGuiVmEnabled = config.ghaf.virtualization.microvm.guivm.enable;
-  #isDendritePineconeEnabled = config.ghaf.common.networking.dendrite-pinecone.enable;
-  # = import ../../../common/networking/dendrite-pinecone-config.nix{ inherit config lib pkgs;};
   sshKeysHelper = pkgs.callPackage ../../../../packages/ssh-keys-helper {
     inherit pkgs;
     inherit config;
@@ -43,7 +41,6 @@
 
         nixpkgs.buildPlatform.system = configHost.nixpkgs.buildPlatform.system;
         nixpkgs.hostPlatform.system = configHost.nixpkgs.hostPlatform.system;
-        
 
         networking = {
           firewall.allowedTCPPorts = [53];

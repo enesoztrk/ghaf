@@ -18,7 +18,7 @@
     );
   };
 
-  netvmAdditionalFirewallConfig = let
+  netvmAdditionalConfig = let
     externalNic = let
       firstPciWifiDevice = lib.head configH.ghaf.hardware.definition.network.pciDevices;
     in "${firstPciWifiDevice.name}";
@@ -31,20 +31,7 @@
     in "${lib.head vmNetworking.networking.nat.internalInterfaces}";
 
     elemen-vmIp = "192.168.100.253";
-
   in {
-   #   configH.dendrite-pinecone = true;
-    ghaf.services.dendrite-pinecone = {
-      firewallConfig = true;
-      externalNic = "${externalNic}";
-      internalNic = "${internalNic}";
-      serverIpAddr = "${elemen-vmIp}";
-    };
-    # DNS host record has been added for element-vm static ip
-    services.dnsmasq.settings.host-record = "element-vm,element-vm.ghaf,${elemen-vmIp}";
-  };
-
-  netvmAdditionalConfig = {
     # For WLAN firmwares
     hardware.enableRedistributableFirmware = true;
 
@@ -85,5 +72,14 @@
     services.openssh = configH.ghaf.security.sshKeys.sshAuthorizedKeysCommand;
 
     time.timeZone = "Asia/Dubai";
+
+    ghaf.services.dendrite-pinecone = {
+      firewallConfig = true;
+      externalNic = "${externalNic}";
+      internalNic = "${internalNic}";
+      serverIpAddr = "${elemen-vmIp}";
+    };
+    # DNS host record has been added for element-vm static ip
+    services.dnsmasq.settings.host-record = "element-vm,element-vm.ghaf,${elemen-vmIp}";
   };
-in [netvmPCIPassthroughModule netvmAdditionalConfig netvmAdditionalFirewallConfig]
+in [netvmPCIPassthroughModule netvmAdditionalConfig]
