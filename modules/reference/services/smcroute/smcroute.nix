@@ -1,7 +1,13 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.services.smcroute;
-in {
+in
+{
   options.services.smcroute = {
     enable = lib.mkEnableOption "smcroute";
     confFile = lib.mkOption {
@@ -11,10 +17,61 @@ in {
         Ignore all other smcroute options and load configuration from this file.
       '';
     };
-  
+
+    bindingNic = lib.mkOption {
+      type = lib.types.str;
+      default = "";
+      example = "";
+      description = ''
+      Binding NIC
+      '';
+    };
+
+    user = lib.mkOption {
+      type = lib.types.str;
+      default = "net-admin";
+      example = "net-admin";
+      description = ''
+        System service user
+      '';
+    };
+
+    rules = lib.mkOption {
+      type = lib.types.nullOr lib.types.lines;
+      default = null;
+      description = ''
+        https://github.com/troglobit/smcroute?tab=readme-ov-file#usage
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
+    assertions = [
+      {
+        assertion = cfg.bindingNic != "";
+        message = "Binding Nic must be set";
+      }
+    ];
+
+  # Allow proxy-admin group to manage specific systemd services without a password
+    security = {
+      polkit = {
+        enable = true;
+        debug = true;
+        # Polkit rules for allowing proxy-user to run proxy related systemctl 
+        # commands without sudo and password requirement 
+        extraConfig = ''
+          polkit.addRule(function(action, subject) {
+              if ((action.id == "org.freedesktop.systemd1.manage-units" &&
+                   (action.lookup("unit") == "smcroute.service") &&
+                  subject.user == "${cfg.user}") {
+                  return polkit.Result.YES;
+              }
+          });
+        '';
+      };
+
+    };
 
     environment.systemPackages = [ pkgs.smcroute ];
 
@@ -36,46 +93,33 @@ in {
       }
     ];
 
+    services.smcroute.confFile = lib.mkDefault (
+      pkgs.writeText "smcroute.conf" ''
 
-    services.smcroute.confFile = lib.mkDefault (pkgs.writeText "smcroute.conf" ''
-     
-    '');
-        systemd.services."smcroute" = {
+        ${lib.concatStringsSep "\n" (lib.optionals (cfg.rules != null) [ cfg.rules ])}
+      ''
+    );
+
+    systemd.services."smcroute" = {
       description = "Static Multicast Routing daemon";
-    /*   bindsTo = [ "sys-subsystem-net-devices-${cfg.externalNic}.device" ];
-      after = [ "sys-subsystem-net-devices-${cfg.externalNic}.device" ];
+      bindsTo = [ "sys-subsystem-net-devices-${cfg.bindingNic}.device" ];
+      after = [ "sys-subsystem-net-devices-${cfg.bindingNic}.device" ];
       preStart = ''
-              configContent=$(cat <<EOF
-        mgroup from ${cfg.externalNic} group ${dendrite-pineconePkg.McastUdpIp}
-        mgroup from ${cfg.internalNic} group ${dendrite-pineconePkg.McastUdpIp}
-        mroute from ${cfg.externalNic} group ${dendrite-pineconePkg.McastUdpIp} to ${cfg.internalNic}
-        mroute from ${cfg.internalNic} group ${dendrite-pineconePkg.McastUdpIp} to ${cfg.externalNic}
-        EOF
-        )
-        filePath="/etc/smcroute.conf"
-        touch $filePath
-          chmod 200 $filePath
-          echo "$configContent" > $filePath
-          chmod 400 $filePath
-
-        # wait until ${cfg.externalNic} has an ip
+        # wait until ${cfg.bindingNic} has an ip
+        sleep 5
         while [ -z "$ip" ]; do
-         ip=$(${pkgs.nettools}/bin/ifconfig ${cfg.externalNic} | ${pkgs.gawk}/bin/awk '/inet / {print $2}')
+         ip=$(${pkgs.nettools}/bin/ifconfig ${cfg.bindingNic} | ${pkgs.gawk}/bin/awk '/inet / {print $2}')
               [ -z "$ip" ] && ${pkgs.coreutils}/bin/sleep 1
         done
         exit 0
-      ''; */
+      '';
 
       serviceConfig = {
         Type = "simple";
         ExecStart = "${pkgs.smcroute}/sbin/smcrouted -n -s -f ${cfg.confFile}";
-        #TODO sudo setcap cap_net_admin=ep ${pkgs.smcroute}/sbin/smcroute
-        # TODO: Add proper AmbientCapabilities= or CapabilityBoundingSet=,
-        #       preferably former and then change user to something else than
-        #       root.
-        User = "root";
-        # Automatically restart service when it exits.
-        Restart = "always";
+        User = "${cfg.user}";
+        # Restart the service if it fails
+        Restart = "on-failure";
         # Wait a second before restarting.
         RestartSec = "5s";
       };
