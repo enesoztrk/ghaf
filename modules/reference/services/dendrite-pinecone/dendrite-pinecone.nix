@@ -60,7 +60,8 @@ in
       }
     ];
 
-    # ip forwarding functionality is needed for iptables
+    services.smcroute.enable= true;
+   /*  # ip forwarding functionality is needed for iptables
     boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
 
     # https://github.com/troglobit/smcroute?tab=readme-ov-file#linux-requirements
@@ -119,7 +120,7 @@ in
       };
       wantedBy = [ "multi-user.target" ];
     };
-
+ */
     networking = {
       firewall.enable = true;
       firewall.extraCommands = "
