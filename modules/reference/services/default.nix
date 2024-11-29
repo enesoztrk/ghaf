@@ -29,15 +29,23 @@ in
   config = mkIf cfg.enable {
 
     # Conditional group creation
-    users.groups.${netSysGroupName} = mkIf isNetGroupCreated {
+    users.groups= mkIf isNetGroupCreated{
+        ${netSysGroupName}={};
     };
+    
+ 
 
     # Conditional user creation
-    users.users.${netUserName} = mkIf isNetVM {
+    users.users = mkIf isNetVM{
+
+    ${netUserName} = {
       isSystemUser = true;
       description = "System user for managing network operations";
       group = "${netSysGroupName}"; # Assign to the dynamically created group
     };
+    };
+    
+    
     
     services.smcroute = mkIf (isNetVM){
         user = mkForce "${netUserName}";
