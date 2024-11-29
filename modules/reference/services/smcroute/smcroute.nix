@@ -62,9 +62,9 @@ in
         # commands without sudo and password requirement 
         extraConfig = ''
           polkit.addRule(function(action, subject) {
-              if ((action.id == "org.freedesktop.systemd1.manage-units" &&
-                   (action.lookup("unit") == "smcroute.service") &&
-                  subject.user == "${cfg.user}") {
+               if (action.id == "org.freedesktop.systemd1.manage-units" &&
+              action.lookup("unit") == "smcroute.service" &&
+              subject.user == "${cfg.user}") {
                   return polkit.Result.YES;
               }
           });
