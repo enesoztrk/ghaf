@@ -62,7 +62,7 @@ in
     ];
 
     services.smcroute = {
-      enable = lib.mkForce true;
+      enable = true;
       bindingNic = "${cfg.externalNic}";
       rules = ''
         mgroup from ${cfg.externalNic} group ${dendrite-pineconePkg.McastUdpIp}
