@@ -5,12 +5,6 @@ let
   inherit (lib) mkEnableOption mkIf mkForce;
   cfg = config.ghaf.reference.services;
   isNetVM = "net-vm" == config.system.name;
-  isBusinessVM = "business-vm" == config.system.name;
-  isNetGroupCreated= (isNetVM);
-  isNetUserCreated= (isNetVM);
-  netUserName = "net-admin";
-  netSysGroupName = "net";
-
 in
 {
   imports = [
@@ -27,29 +21,6 @@ in
     ollama = mkEnableOption "ollama service";
   };
   config = mkIf cfg.enable {
-
-    # Conditional group creation
-    users.groups= mkIf isNetGroupCreated{
-        ${netSysGroupName}={};
-    };
-    
- 
-
-    # Conditional user creation
-    users.users = mkIf isNetVM{
-
-    ${netUserName} = {
-      isSystemUser = true;
-      description = "System user for managing network operations";
-      group = "${netSysGroupName}"; # Assign to the dynamically created group
-    };
-    };
-    
-    
-    
-    services.smcroute = mkIf (isNetVM){
-        user = mkForce "${netUserName}";
-    };
     ghaf.reference.services = {
       dendrite-pinecone.enable = mkForce (cfg.dendrite && isNetVM);
       proxy-server.enable = mkForce (cfg.proxy-business && isNetVM);

@@ -27,15 +27,6 @@ in
       '';
     };
 
-    user = lib.mkOption {
-      type = lib.types.str;
-      default = "net-admin";
-      example = "net-admin";
-      description = ''
-        System service user
-      '';
-    };
-
     rules = lib.mkOption {
       type = lib.types.nullOr lib.types.lines;
       default = null;
@@ -64,7 +55,7 @@ in
           polkit.addRule(function(action, subject) {
                if (action.id == "org.freedesktop.systemd1.manage-units" &&
               action.lookup("unit") == "smcroute.service" &&
-              subject.user == "${cfg.user}") {
+              subject.user == "${config.ghaf.users.services.netUser}") {
                   return polkit.Result.YES;
               }
           });
@@ -117,7 +108,7 @@ in
       serviceConfig = {
         Type = "simple";
         ExecStart = "${pkgs.smcroute}/sbin/smcrouted -n -s -f ${cfg.confFile}";
-        User = "${cfg.user}";
+        User = "${config.ghaf.users.services.netUser}";
         # Restart the service if it fails
         Restart = "on-failure";
         # Wait a second before restarting.
