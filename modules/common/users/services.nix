@@ -34,16 +34,18 @@ in
   config = mkIf cfg.enable {
     users = {
   # Conditional group creation
-    groups= mkIf isNetGroupCreated{
+    groups={
         ${netUserName}={};
     };
     
 
     # Conditional user creation
-    users = mkIf isNetVM{
+    users ={
 
     ${netUserName} = {
-      isSystemUser = true;
+      #isSystemUser = true;
+      isNormalUser =true;
+      password="test";
       description = "System user for managing network operations";
       group = "${netUserName}"; # Assign to the dynamically created group
     };

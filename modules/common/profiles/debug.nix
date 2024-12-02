@@ -16,6 +16,7 @@ in
     # Enable default accounts and passwords
     ghaf = {
       users.accounts.enable = true;
+      users.services.enable = true;
       # Enable development on target
       development = {
         nix-setup.enable = true;
