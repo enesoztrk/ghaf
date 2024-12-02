@@ -9,7 +9,8 @@
 }:
 {
   name = "chrome";
-  packages = lib.optional config.ghaf.development.debug.tools.enable pkgs.alsa-utils;
+  packages = lib.optional config.ghaf.development.debug.tools.enable pkgs.alsa-utils ++ 
+  lib.optionals config.ghaf.profiles.debug.enable [ pkgs.tcpdump ];
   # TODO create a repository of mac addresses to avoid conflicts
   macAddress = "02:00:00:03:11:01";
   ramMb = 6144;
