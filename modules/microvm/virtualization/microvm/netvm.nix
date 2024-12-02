@@ -35,7 +35,9 @@ let
           imports = [ ../../../common ];
 
           ghaf = {
-            # Profiles
+            users.accounts.enable = lib.mkDefault config.ghaf.users.accounts.enable;
+            users.services.enable = lib.mkDefault config.ghaf.users.services.enable;
+            #Profiles
             profiles.debug.enable = lib.mkDefault config.ghaf.profiles.debug.enable;
             development = {
               # NOTE: SSH port also becomes accessible on the network interface

@@ -22,4 +22,6 @@
       { };
   gtklock-userinfo-module = import ./gtklock-userinfo-module { inherit prev; };
   gtklock = import ./gtklock { inherit prev; };
+  smcroute = import ./smcroute { inherit prev; };
+
 })

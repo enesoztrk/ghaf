@@ -1,0 +1,359 @@
+diff --git a/src/smcrouted.c b/src/smcrouted.c
+index 19a9bdb..a3e1640 100644
+--- a/src/smcrouted.c
++++ b/src/smcrouted.c
+@@ -27,7 +27,7 @@
+ #include <sysexits.h>
+ #include <unistd.h>
+ #include <arpa/inet.h>
+-#include <sys/time.h>		/* gettimeofday() */
++#include <sys/time.h> /* gettimeofday() */
+ #include <sys/un.h>
+ 
+ #include "cap.h"
+@@ -46,31 +46,30 @@
+ #include "mcgroup.h"
+ 
+ int background = 1;
+-int do_vifs    = 1;
+-int do_syslog  = 1;
+-int cache_tmo  = 60;
+-int interval   = MRDISC_INTERVAL_DEFAULT;
++int do_vifs = 1;
++int do_syslog = 1;
++int cache_tmo = 60;
++int interval = MRDISC_INTERVAL_DEFAULT;
+ int startup_delay = 0;
+ int exit_delay = 0;
+-int table_id   = 0;
++int table_id = 0;
+ 
+-char *script    = NULL;
+-char *ident     = PACKAGE;
+-char *prognm    = NULL;
+-char *pid_file  = NULL;
++char *script = NULL;
++char *ident = PACKAGE;
++char *prognm = NULL;
++char *pid_file = NULL;
+ char *conf_file = NULL;
+ char *sock_file = NULL;
+-int   conf_vrfy = 0;
++int conf_vrfy = 0;
+ 
+ static uid_t uid = 0;
+ static gid_t gid = 0;
+ 
+ volatile sig_atomic_t reloading = 0;
+-volatile sig_atomic_t running   = 1;
++volatile sig_atomic_t running = 1;
+ 
+ static const char version_info[] = PACKAGE_NAME " v" PACKAGE_VERSION;
+ 
+-
+ /* Cleans up, i.e. releases allocated resources. Called via atexit() */
+ static void clean(void)
+ {
+@@ -105,7 +104,8 @@ void reload(void)
+  */
+ static void handler(int signo)
+ {
+-	switch (signo) {
++	switch (signo)
++	{
+ 	case SIGINT:
+ 	case SIGTERM:
+ 		running = 0;
+@@ -122,11 +122,11 @@ static void signal_init(void)
+ 	struct sigaction sa;
+ 
+ 	sa.sa_handler = handler;
+-	sa.sa_flags = 0;	/* Interrupt system calls */
++	sa.sa_flags = 0; /* Interrupt system calls */
+ 	sigemptyset(&sa.sa_mask);
+-	if (sigaction(SIGHUP,  &sa, NULL)  ||
+-	    sigaction(SIGTERM, &sa, NULL) ||
+-	    sigaction(SIGINT,  &sa, NULL))
++	if (sigaction(SIGHUP, &sa, NULL) ||
++		sigaction(SIGTERM, &sa, NULL) ||
++		sigaction(SIGINT, &sa, NULL))
+ 		smclog(LOG_WARNING, "Failed setting up signal handlers: %s", strerror(errno));
+ }
+ 
+@@ -142,8 +142,10 @@ static int server_loop(void)
+ 	script_init(script);
+ 	mrdisc_init(interval);
+ 
+-	while (running) {
+-		if (reloading) {
++	while (running)
++	{
++		if (reloading)
++		{
+ 			reload();
+ 			reloading = 0;
+ 		}
+@@ -160,13 +162,15 @@ static int start_server(void)
+ {
+ 	int api = 2, busy = 0;
+ 
+-	if (geteuid() != 0) {
++	/* if (geteuid() != 0) {
+ 		smclog(LOG_ERR, "Need root privileges to start %s", prognm);
+ 		return EX_NOPERM;
+-	}
++	} */
+ 
+-	if (background) {
+-		if (daemon(0, 0) < 0) {
++	if (background)
++	{
++		if (daemon(0, 0) < 0)
++		{
+ 			smclog(LOG_ERR, "Failed daemonizing: %s", strerror(errno));
+ 			return EX_OSERR;
+ 		}
+@@ -175,7 +179,8 @@ static int start_server(void)
+ 	/* Hello world! */
+ 	smclog(LOG_NOTICE, "%s", version_info);
+ 
+-	if (startup_delay > 0) {
++	if (startup_delay > 0)
++	{
+ 		smclog(LOG_INFO, "Startup delay requested, waiting %d sec before continuing.", startup_delay);
+ 		sleep(startup_delay);
+ 	}
+@@ -185,7 +190,8 @@ static int start_server(void)
+ 	 */
+ 	timer_init();
+ 
+-	if (exit_delay > 0) {
++	if (exit_delay > 0)
++	{
+ 		smclog(LOG_INFO, "Exit delay requested, starting background timer, %d sec", exit_delay);
+ 		timer_add(exit_delay, server_exit, NULL);
+ 	}
+@@ -195,7 +201,8 @@ static int start_server(void)
+ 	 */
+ 	iface_init();
+ 
+-	if (mroute_init(do_vifs, table_id, cache_tmo)) {
++	if (mroute_init(do_vifs, table_id, cache_tmo))
++	{
+ 		if (errno == EADDRINUSE)
+ 			busy++;
+ 		api--;
+@@ -203,8 +210,10 @@ static int start_server(void)
+ 
+ 	/* At least one API (IPv4 or IPv6) must have initialized successfully
+ 	 * otherwise we abort the server initialization. */
+-	if (!api) {
+-		if (busy) {
++	if (!api)
++	{
++		if (busy)
++		{
+ 			smclog(LOG_ERR, "Another multicast routing application is already running.");
+ 			exit(EX_UNAVAILABLE);
+ 		}
+@@ -242,11 +251,13 @@ static void cleanup(void)
+ static int compose_paths(void)
+ {
+ 	/* Default .conf file path: "/etc" + '/' + "smcroute" + ".conf" */
+-	if (!conf_file) {
++	if (!conf_file)
++	{
+ 		size_t len = strlen(SYSCONFDIR) + strlen(ident) + 7;
+ 
+ 		conf_file = malloc(len);
+-		if (!conf_file) {
++		if (!conf_file)
++		{
+ 			smclog(LOG_ERR, "Failed allocating memory, exiting: %s", strerror(errno));
+ 			exit(EX_OSERR);
+ 		}
+@@ -254,11 +265,13 @@ static int compose_paths(void)
+ 		snprintf(conf_file, len, "%s/%s.conf", SYSCONFDIR, ident);
+ 	}
+ 
+-	if (!sock_file) {
++	if (!sock_file)
++	{
+ 		size_t len = strlen(RUNSTATEDIR) + strlen(ident) + 7;
+ 
+ 		sock_file = malloc(len);
+-		if (!sock_file) {
++		if (!sock_file)
++		{
+ 			smclog(LOG_ERR, "Failed allocating memory, exiting: %s", strerror(errno));
+ 			exit(EX_OSERR);
+ 		}
+@@ -277,7 +290,7 @@ static int compose_paths(void)
+ 
+ static int usage(int code)
+ {
+-        char *pidfn;
++	char *pidfn;
+ 	size_t len;
+ 
+ 	compose_paths();
+@@ -292,42 +305,43 @@ static int usage(int code)
+ 		snprintf(pidfn, len, "%s", pid_file);
+ 
+ 	printf("Usage:\n"
+-	       "  %s [-hnNsv] [-c SEC] [-d SEC] [-e CMD] [-f FILE] [-i NAME] [-l LVL] "
+-	       "\n"
+-	       "                     "
++		   "  %s [-hnNsv] [-c SEC] [-d SEC] [-e CMD] [-f FILE] [-i NAME] [-l LVL] "
++		   "\n"
++		   "                     "
+ #ifdef ENABLE_MRDISC
+-	       "[-m SEC] "
++		   "[-m SEC] "
+ #endif
+-	       "[-P FILE] [-t ID] [-u FILE]\n"
+-	       "\n"
+-	       "Options:\n"
+-	       "  -c SEC          Flush dynamic (*,G) multicast routes every SEC seconds,\n"
+-	       "                  default 60 sec.  Useful when source/interface changes\n"
+-	       "  -d SEC          Startup delay, useful for delaying interface probe at boot\n"
+-	       "  -e CMD          Script or command to call on startup/reload when all routes\n"
+-	       "                  have been installed, or when a (*,G) is installed\n"
+-	       "  -f FILE         Configuration file, default use ident NAME: %s\n"
+-	       "  -F FILE         Check configuration file syntax, use -l to increase verbosity\n"
+-	       "  -h              This help text\n"
+-	       "  -i NAME         Identity for .conf/.pid/.sock file, and syslog, default: %s\n"
+-	       "  -l LVL          Set log level: none, err, notice*, info, debug\n"
++		   "[-P FILE] [-t ID] [-u FILE]\n"
++		   "\n"
++		   "Options:\n"
++		   "  -c SEC          Flush dynamic (*,G) multicast routes every SEC seconds,\n"
++		   "                  default 60 sec.  Useful when source/interface changes\n"
++		   "  -d SEC          Startup delay, useful for delaying interface probe at boot\n"
++		   "  -e CMD          Script or command to call on startup/reload when all routes\n"
++		   "                  have been installed, or when a (*,G) is installed\n"
++		   "  -f FILE         Configuration file, default use ident NAME: %s\n"
++		   "  -F FILE         Check configuration file syntax, use -l to increase verbosity\n"
++		   "  -h              This help text\n"
++		   "  -i NAME         Identity for .conf/.pid/.sock file, and syslog, default: %s\n"
++		   "  -l LVL          Set log level: none, err, notice*, info, debug\n"
+ #ifdef ENABLE_MRDISC
+-	       "  -m SEC          Multicast router discovery, 4-180, default: 20 sec\n"
++		   "  -m SEC          Multicast router discovery, 4-180, default: 20 sec\n"
+ #endif
+-	       "  -n              Run daemon in foreground, when started by systemd or finit\n"
+-	       "  -N              No multicast VIFs/MIFs created by default.  Use with\n"
+-	       "                  smcroute.conf `phyint enable` directive\n"
++		   "  -n              Run daemon in foreground, when started by systemd or finit\n"
++		   "  -N              No multicast VIFs/MIFs created by default.  Use with\n"
++		   "                  smcroute.conf `phyint enable` directive\n"
+ #ifdef ENABLE_LIBCAP
+-	       "  -p USER[:GROUP] After initialization set UID and GID to USER and GROUP\n"
++		   "  -p USER[:GROUP] After initialization set UID and GID to USER and GROUP\n"
+ #endif
+-	       "  -P FILE         Set daemon PID file name, with optional path.\n"
+-	       "                  Default use ident NAME: %s\n"
+-	       "  -s              Use syslog, default unless running in foreground, -n\n"
+-	       "  -t ID           Set multicast routing table ID, default: 0\n"
+-	       "  -u FILE         UNIX domain socket path, for use with smcroutectl.\n"
+-	       "                  Default use ident NAME: %s\n"
+-	       "  -v              Show program version and support information\n"
+-	       "\n", prognm, conf_file, ident, pidfn, sock_file);
++		   "  -P FILE         Set daemon PID file name, with optional path.\n"
++		   "                  Default use ident NAME: %s\n"
++		   "  -s              Use syslog, default unless running in foreground, -n\n"
++		   "  -t ID           Set multicast routing table ID, default: 0\n"
++		   "  -u FILE         UNIX domain socket path, for use with smcroutectl.\n"
++		   "                  Default use ident NAME: %s\n"
++		   "  -v              Show program version and support information\n"
++		   "\n",
++		   prognm, conf_file, ident, pidfn, sock_file);
+ 
+ 	free(pidfn);
+ 	cleanup();
+@@ -365,9 +379,11 @@ int main(int argc, char *argv[])
+ 	int c, new_log_level = -1;
+ 
+ 	prognm = progname(argv[0]);
+-	while ((c = getopt(argc, argv, "c:d:D:e:f:F:hI:i:l:m:nNp:P:st:u:v")) != EOF) {
+-		switch (c) {
+-		case 'c':	/* cache timeout */
++	while ((c = getopt(argc, argv, "c:d:D:e:f:F:hI:i:l:m:nNp:P:st:u:v")) != EOF)
++	{
++		switch (c)
++		{
++		case 'c': /* cache timeout */
+ 			cache_tmo = atoi(optarg);
+ 			break;
+ 
+@@ -375,7 +391,7 @@ int main(int argc, char *argv[])
+ 			startup_delay = atoi(optarg);
+ 			break;
+ 
+-		case 'D':		/* Undocumented, used for testing. */
++		case 'D': /* Undocumented, used for testing. */
+ 			exit_delay = atoi(optarg);
+ 			break;
+ 
+@@ -391,10 +407,10 @@ int main(int argc, char *argv[])
+ 			conf_file = strdup(optarg);
+ 			break;
+ 
+-		case 'h':	/* help */
++		case 'h': /* help */
+ 			return usage(EX_OK);
+ 
+-		case 'I':	/* compat with previous versions */
++		case 'I': /* compat with previous versions */
+ 		case 'i':
+ 			ident = optarg;
+ 			break;
+@@ -413,7 +429,7 @@ int main(int argc, char *argv[])
+ #endif
+ 			break;
+ 
+-		case 'n':	/* run daemon in foreground, i.e., do not fork */
++		case 'n': /* run daemon in foreground, i.e., do not fork */
+ 			background = 0;
+ 			do_syslog--;
+ 			break;
+@@ -431,7 +447,7 @@ int main(int argc, char *argv[])
+ 			pid_file = optarg;
+ 			break;
+ 
+-		case 's':	/* Force syslog even though in foreground */
++		case 's': /* Force syslog even though in foreground */
+ 			do_syslog++;
+ 			break;
+ 
+@@ -449,16 +465,17 @@ int main(int argc, char *argv[])
+ 			sock_file = strdup(optarg);
+ 			break;
+ 
+-		case 'v':	/* version */
++		case 'v': /* version */
+ 			puts(version_info);
+ 			printf("\n"
+-			       "Bug report address: %s\n", PACKAGE_BUGREPORT);
++				   "Bug report address: %s\n",
++				   PACKAGE_BUGREPORT);
+ #ifdef PACKAGE_URL
+ 			printf("Project homepage:   %s\n", PACKAGE_URL);
+ #endif
+ 			return EX_OK;
+ 
+-		default:	/* unknown option */
++		default: /* unknown option */
+ 			return usage(EX_USAGE);
+ 		}
+ 	}
+@@ -468,7 +485,8 @@ int main(int argc, char *argv[])
+ 
+ 	compose_paths();
+ 
+-	if (conf_vrfy) {
++	if (conf_vrfy)
++	{
+ 		smclog(LOG_INFO, "Verifying configuration file %s ...", conf_file);
+ 		iface_init();
+ 		c = conf_read(conf_file, do_vifs);

@@ -91,6 +91,16 @@ in
       ''
     );
 
+    security.wrappers = {
+ # a program with the CAP_NET_ADMIN capability
+  smcrouted =
+    { owner = "root";
+      group = "root";
+      capabilities = "cap_net_admin+ep";
+      source = "${pkgs.smcroute}/sbin/smcrouted";
+    };
+    };
+
     systemd.services."smcroute" = {
       description = "Static Multicast Routing daemon";
       bindsTo = [ "sys-subsystem-net-devices-${cfg.bindingNic}.device" ];
@@ -113,6 +123,12 @@ in
         Restart = "on-failure";
         # Wait a second before restarting.
         RestartSec = "5s";
+        AmbientCapabilities = "cap_net_admin";
+        CapabilityBoundingSet = "cap_net_admin";
+        # PrivateTmp = true;
+        # PrivateDevices = true;
+        # ProtectHome = true;
+        # ProtectSystem = "full";
       };
       wantedBy = [ "multi-user.target" ];
     };
