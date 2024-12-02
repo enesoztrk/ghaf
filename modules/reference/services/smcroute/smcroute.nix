@@ -91,15 +91,7 @@ in
       ''
     );
 
-    security.wrappers = {
- # a program with the CAP_NET_ADMIN capability
-  smcrouted =
-    { owner = "root";
-      group = "root";
-      capabilities = "cap_net_admin+ep";
-      source = "${pkgs.smcroute}/sbin/smcrouted";
-    };
-    };
+
 
     systemd.services."smcroute" = {
       description = "Static Multicast Routing daemon";
@@ -118,17 +110,17 @@ in
       serviceConfig = {
         Type = "simple";
         ExecStart = "${pkgs.smcroute}/sbin/smcrouted -n -s -f ${cfg.confFile}";
-        User = "${config.ghaf.users.services.netUser}";
+        User = "root";
         # Restart the service if it fails
         Restart = "on-failure";
         # Wait a second before restarting.
         RestartSec = "5s";
-        AmbientCapabilities = "cap_net_admin";
-        CapabilityBoundingSet = "cap_net_admin";
+        #AmbientCapabilities = "cap_net_admin";
+        #CapabilityBoundingSet = "cap_net_admin";
         # PrivateTmp = true;
         # PrivateDevices = true;
-        # ProtectHome = true;
-        # ProtectSystem = "full";
+         ProtectHome = true;
+         ProtectSystem = "full";
       };
       wantedBy = [ "multi-user.target" ];
     };

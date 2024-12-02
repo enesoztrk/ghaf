@@ -21,6 +21,6 @@
     final.libsForQt5.callPackage ../../packages/globalprotect-openconnect
       { };
   gtklock-userinfo-module = import ./gtklock-userinfo-module { inherit prev; };
-  smcroute = import ./smcroute { inherit prev; };
+ # smcroute = import ./smcroute { inherit prev; };
 
 })

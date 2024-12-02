@@ -80,22 +80,22 @@ in
         iptables -P OUTPUT ACCEPT
 
         # Allow loopback traffic
-        iptables -A INPUT -i lo -j ACCEPT
+        iptables -I INPUT -i lo -j ACCEPT
 
         # TODO: Move all these TcpPort and things like that, to the options of
         #       this module, away from from package itself.
 
         # Forward incoming TCP traffic on port ${dendrite-pineconePkg.TcpPort} to internal network(comms-vm)
-        iptables -t nat -A PREROUTING -i ${cfg.externalNic} -p tcp --dport ${dendrite-pineconePkg.TcpPort} -j DNAT --to-destination  ${cfg.serverIpAddr}:${dendrite-pineconePkg.TcpPort}
+        iptables -t nat -I PREROUTING -i ${cfg.externalNic} -p tcp --dport ${dendrite-pineconePkg.TcpPort} -j DNAT --to-destination  ${cfg.serverIpAddr}:${dendrite-pineconePkg.TcpPort}
 
         # Enable NAT for outgoing traffic
-        iptables -t nat -A POSTROUTING -o ${cfg.externalNic} -p tcp --dport ${dendrite-pineconePkg.TcpPort} -j MASQUERADE
+        iptables -t nat -I POSTROUTING -o ${cfg.externalNic} -p tcp --dport ${dendrite-pineconePkg.TcpPort} -j MASQUERADE
 
         # Enable NAT for outgoing traffic
-        iptables -t nat -A POSTROUTING -o ${cfg.externalNic} -p tcp --sport ${dendrite-pineconePkg.TcpPort} -j MASQUERADE
+        iptables -t nat -I POSTROUTING -o ${cfg.externalNic} -p tcp --sport ${dendrite-pineconePkg.TcpPort} -j MASQUERADE
 
         # Enable NAT for outgoing udp multicast traffic
-        iptables -t nat -A POSTROUTING -o ${cfg.externalNic} -p udp -d ${dendrite-pineconePkg.McastUdpIp} --dport ${dendrite-pineconePkg.McastUdpPort} -j MASQUERADE
+        iptables -t nat -I POSTROUTING -o ${cfg.externalNic} -p udp -d ${dendrite-pineconePkg.McastUdpIp} --dport ${dendrite-pineconePkg.McastUdpPort} -j MASQUERADE
 
         # https://github.com/troglobit/smcroute?tab=readme-ov-file#usage
         iptables -t mangle -I PREROUTING -i ${cfg.externalNic} -d ${dendrite-pineconePkg.McastUdpIp} -j TTL --ttl-set 1
@@ -103,7 +103,7 @@ in
         iptables -t mangle -I PREROUTING -i ${cfg.internalNic} -d ${dendrite-pineconePkg.McastUdpIp} -j TTL --ttl-inc 1
 
         # Accept forwarding
-        iptables -A FORWARD -j ACCEPT
+        iptables -I FORWARD -j ACCEPT
       ";
     };
   };
