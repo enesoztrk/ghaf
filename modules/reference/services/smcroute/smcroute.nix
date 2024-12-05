@@ -95,8 +95,12 @@ in
 
     systemd.services."smcroute" = {
       description = "Static Multicast Routing daemon";
-      bindsTo = [ "sys-subsystem-net-devices-${cfg.bindingNic}.device" ];
-      after = [ "sys-subsystem-net-devices-${cfg.bindingNic}.device" ];
+    #  bindsTo = [ "sys-subsystem-net-devices-${cfg.bindingNic}.device" ];
+    #  after = [ "sys-subsystem-net-devices-${cfg.bindingNic}.device" ];
+      wantedBy = [ "multi-user.target" ];
+      #after = [ "network.target" ];
+      after=["network-online.target"];
+      requires=["network-online.target"];
       preStart = ''
         # wait until ${cfg.bindingNic} has an ip
         sleep 5
@@ -120,9 +124,10 @@ in
         # PrivateTmp = true;
         # PrivateDevices = true;
          ProtectHome = true;
-         ProtectSystem = "full";
+         NoNewPrivileges=true;
+         ProtectControlGroups=true;
+         ProtectSystem="full";
       };
-      wantedBy = [ "multi-user.target" ];
     };
 
   };

@@ -74,13 +74,6 @@ in
     networking = {
       firewall.enable = true;
       firewall.extraCommands = "
-        # Set the default policies
-        iptables -P INPUT DROP
-        iptables -P FORWARD DROP
-        iptables -P OUTPUT ACCEPT
-
-        # Allow loopback traffic
-        iptables -I INPUT -i lo -j ACCEPT
 
         # TODO: Move all these TcpPort and things like that, to the options of
         #       this module, away from from package itself.
@@ -102,8 +95,18 @@ in
         # ttl value must be set to 1 for avoiding multicast looping
         iptables -t mangle -I PREROUTING -i ${cfg.internalNic} -d ${dendrite-pineconePkg.McastUdpIp} -j TTL --ttl-inc 1
 
-        # Accept forwarding
-        iptables -I FORWARD -j ACCEPT
+          # Log all packets
+    iptables -I INPUT -j LOG --log-prefix 'fw-INPUT packet: ' --log-level 5
+    iptables -I FORWARD -j LOG --log-prefix 'fw-FORWARD packet: ' --log-level 5
+    iptables -I OUTPUT -j LOG --log-prefix 'fw-OUTPUT packet: ' --log-level 5
+
+    # Log all NAT table packets
+    iptables -t nat -I PREROUTING -j LOG --log-prefix 'fw-NAT PREROUTING: ' --log-level 5
+    iptables -t nat -I POSTROUTING -j LOG --log-prefix 'fw-NAT POSTROUTING: ' --log-level 5
+
+    # Log all Mangle table packets
+    iptables -t mangle -I PREROUTING -j LOG --log-prefix 'fw-MANGLE PREROUTING: ' --log-level 5
+    iptables -t mangle -I POSTROUTING -j LOG --log-prefix 'fw-MANGLE POSTROUTING: ' --log-level 5
       ";
     };
   };
