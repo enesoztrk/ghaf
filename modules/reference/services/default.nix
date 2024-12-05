@@ -21,14 +21,14 @@ in
     enable = mkEnableOption "Ghaf reference services";
     dendrite = mkEnableOption "dendrite-pinecone service";
     proxy-business = mkEnableOption "Enable the proxy server service";
-    chromecast = mkEnableOption "Chromecast service";
+    google-chromecast = mkEnableOption "Chromecast service";
     ollama = mkEnableOption "ollama service";
   };
   config = mkIf cfg.enable {
     ghaf.reference.services = {
       dendrite-pinecone.enable = mkForce (cfg.dendrite && isNetVM);
       proxy-server.enable = mkForce (cfg.proxy-business && isNetVM);
-      chromecast.enable = mkForce (cfg.chromecast && isNetVM);
+      chromecast.enable = mkForce (cfg.google-chromecast && isNetVM);
     };
   };
 }

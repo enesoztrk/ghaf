@@ -44,6 +44,13 @@
   ];
   extraModules = [
     {
+      imports = [ ../programs/google-chrome.nix ];
+
+      time.timeZone = config.time.timeZone;
+    
+    networking =  {
+        firewall.allowedUDPPorts = [ 5353 1900 ];
+      };
       # Disable camera for now, because, due to the bug, the camera is not accessable in BusinessVM
       # microvm.qemu.extraArgs = optionals (
       #   config.ghaf.hardware.usb.internal.enable

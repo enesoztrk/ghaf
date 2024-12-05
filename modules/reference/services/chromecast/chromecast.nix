@@ -52,16 +52,17 @@ in
       }
 
     ];
-    environment.systemPackages =  lib.optionals config.ghaf.profiles.debug.enable [ pkgs.tcpdump ];
+    environment.systemPackages =  lib.optionals config.ghaf.profiles.debug.enable [ pkgs.tcpdump pkgs.gupnp-tools];
 
     services.avahi={
 
       enable =true;
       reflector =true;
       openFirewall=true;
+      allowPointToPoint=true;
     };
 
-    services.smcroute = {
+     services.smcroute = {
       enable = true;
       bindingNic = "${cfg.externalNic}";
       rules = ''
@@ -70,19 +71,11 @@ in
         mroute from ${cfg.externalNic} group ${SsdpMcastIp} to ${cfg.internalNic}
         mroute from ${cfg.internalNic} group ${SsdpMcastIp} to ${cfg.externalNic}
       '';
-    };
+    }; 
     networking = {
       firewall.enable = true;
       firewall.extraCommands = "
-        # Set the default policies
-        iptables -P INPUT DROP
-        iptables -P FORWARD DROP
-        iptables -P OUTPUT ACCEPT
-
-        # Allow loopback traffic
-        iptables -I INPUT -i lo -j ACCEPT
-
-
+      
         # Enable NAT for outgoing udp multicast traffic
         iptables -t nat -I POSTROUTING -o ${cfg.externalNic} -p udp -d ${SsdpMcastIp} --dport ${SsdpMcastPort} -j MASQUERADE
 
@@ -90,9 +83,6 @@ in
         iptables -t mangle -I PREROUTING -i ${cfg.externalNic} -d ${SsdpMcastIp} -j TTL --ttl-set 1
         # ttl value must be set to 1 for avoiding multicast looping
         iptables -t mangle -I PREROUTING -i ${cfg.internalNic} -d ${SsdpMcastIp} -j TTL --ttl-inc 1
-
-        # Accept forwarding
-        iptables -A FORWARD -j ACCEPT
       ";
     };
   };
