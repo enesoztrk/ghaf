@@ -50,6 +50,7 @@
     
     networking =  {
         firewall.allowedUDPPorts = [ 5353 1900 ];
+        firewall.allowedTCPPorts = [8008 8009];
       };
       # Disable camera for now, because, due to the bug, the camera is not accessable in BusinessVM
       # microvm.qemu.extraArgs = optionals (

@@ -15,8 +15,15 @@ let
     mkIf
     types
     ;
+  ChromeCastPort1="8008";
+    ChromeCastPort2="8009";
+
   SsdpMcastPort = "1900";
   SsdpMcastIp = "239.255.255.250";
+
+
+  getNetVmEntry = builtins.filter (x: x.name == "net-vm") config.ghaf.networking.hosts.entries;
+  netVmInternalIp = lib.head (builtins.map (x: x.ip) getNetVmEntry);
 in
 {
   options.ghaf.reference.services.chromecast = {
@@ -37,7 +44,6 @@ in
       '';
     };
 
-
   };
 
   config = mkIf cfg.enable {
@@ -52,14 +58,15 @@ in
       }
 
     ];
-    environment.systemPackages =  lib.optionals config.ghaf.profiles.debug.enable [ pkgs.tcpdump pkgs.gupnp-tools];
+  #  environment.systemPackages =  lib.optionals config.ghaf.profiles.debug.enable [ pkgs.tcpdump nw-packet-forwarder];
+    environment.systemPackages =  [ pkgs.tcpdump];
 
-    services.avahi={
 
-      enable =true;
-      reflector =true;
-      openFirewall=true;
-      allowPointToPoint=true;
+    services.nw-packet-forwarder = {
+      enable = true;
+      externalNic = cfg.externalNic;
+      internalNic = cfg.internalNic;
+      chromecast = true;
     };
 
      services.smcroute = {
@@ -74,16 +81,27 @@ in
     }; 
     networking = {
       firewall.enable = true;
-      firewall.extraCommands = "
-      
-        # Enable NAT for outgoing udp multicast traffic
-        iptables -t nat -I POSTROUTING -o ${cfg.externalNic} -p udp -d ${SsdpMcastIp} --dport ${SsdpMcastPort} -j MASQUERADE
+ firewall.extraCommands = "
 
-        # https://github.com/troglobit/smcroute?tab=readme-ov-file#usage
-        iptables -t mangle -I PREROUTING -i ${cfg.externalNic} -d ${SsdpMcastIp} -j TTL --ttl-set 1
-        # ttl value must be set to 1 for avoiding multicast looping
-        iptables -t mangle -I PREROUTING -i ${cfg.internalNic} -d ${SsdpMcastIp} -j TTL --ttl-inc 1
-      ";
+    # Redirect incoming Chromecast traffic based on source ports (8008 and 8009)
+    iptables -t nat -I PREROUTING -i ${cfg.externalNic} -p tcp --sport ${ChromeCastPort1} -j DNAT --to-destination 192.168.100.100:${ChromeCastPort1}
+    iptables -t nat -I PREROUTING -i ${cfg.externalNic} -p tcp --sport ${ChromeCastPort2} -j DNAT --to-destination 192.168.100.100:${ChromeCastPort2}
+
+    # Forward incoming TCP traffic on ports 8008 and 8009 to the internal NIC
+    iptables -I FORWARD -i ${cfg.externalNic} -o ${cfg.internalNic} -p tcp --sport ${ChromeCastPort1} -j ACCEPT
+    iptables -I FORWARD -i ${cfg.externalNic} -o ${cfg.internalNic} -p tcp --sport ${ChromeCastPort2} -j ACCEPT
+
+    # Enable NAT for outgoing 8008 and 8009 Chromecast traffic
+    iptables -t nat -I POSTROUTING -o ${cfg.externalNic} -p tcp --dport ${ChromeCastPort1} -j MASQUERADE
+    iptables -t nat -I POSTROUTING -o ${cfg.externalNic} -p tcp --dport ${ChromeCastPort2} -j MASQUERADE
+
+    # TTL adjustments to avoid multicast loops
+    iptables -t mangle -I PREROUTING -i ${cfg.externalNic} -d ${SsdpMcastIp} -j TTL --ttl-set 1
+    iptables -t mangle -I PREROUTING -i ${cfg.internalNic} -d ${SsdpMcastIp} -j TTL --ttl-inc 1
+    # Enable NAT for outgoing udp multicast traffic
+        iptables -t nat -I POSTROUTING -o ${cfg.externalNic} -p udp -d ${SsdpMcastIp} --dport ${SsdpMcastPort} -j MASQUERADE
+";
+
     };
   };
 }

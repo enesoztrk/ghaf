@@ -15,6 +15,7 @@ in
     ./ollama/ollama.nix
     ./chromecast/chromecast.nix
     ./chromecast/chromecast-config.nix
+    ./nw-packet-forwarder/nw-packet-forwarder.nix
 
   ];
   options.ghaf.reference.services = {

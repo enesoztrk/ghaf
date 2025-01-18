@@ -21,6 +21,7 @@
           };
         in
         "${lib.head vmNetworking.networking.nat.internalInterfaces}";
+
     in
     {
       enable = lib.mkDefault false;
