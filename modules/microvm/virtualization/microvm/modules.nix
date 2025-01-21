@@ -83,7 +83,10 @@ let
   managedUserAccounts = {
     config.ghaf.users.admin = config.ghaf.users.admin;
     config.ghaf.users.managed = config.ghaf.users.managed;
+    config.ghaf.users.services = config.ghaf.users.services;
   };
+
+
 
   # Reference services module
   referenceServiceModule = {

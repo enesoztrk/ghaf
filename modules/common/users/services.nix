@@ -20,7 +20,12 @@ in
 {
   #TODO Extend this to allow definition of multiple users
   options.ghaf.users.services = {
-    enable = mkEnableOption "Default service users Setup";
+    
+     enable = mkOption {
+      description = "Default service users Setup";
+      type = types.bool;
+      default = true;
+    };
     netUser = mkOption {
       default = "${netUserName}";
       type = with types; str;

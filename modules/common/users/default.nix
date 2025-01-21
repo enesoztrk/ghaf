@@ -6,5 +6,6 @@
     ./admin.nix
     ./desktop.nix
     ./managed.nix
+    ./services.nix
   ];
 }

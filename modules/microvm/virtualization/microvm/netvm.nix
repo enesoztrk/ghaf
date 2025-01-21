@@ -35,8 +35,6 @@ let
           imports = [ ../../../common ];
 
           ghaf = {
-            users.accounts.enable = lib.mkDefault config.ghaf.users.accounts.enable;
-            users.services.enable = lib.mkDefault config.ghaf.users.services.enable;
             #Profiles
             profiles.debug.enable = lib.mkDefault config.ghaf.profiles.debug.enable;
             development = {

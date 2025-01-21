@@ -114,7 +114,8 @@ in
       serviceConfig = {
         Type = "simple";
         ExecStart = "${pkgs.smcroute}/sbin/smcrouted -n -s -f ${cfg.confFile}";
-        User = "root";
+        User = "${config.ghaf.users.services.netUser}";
+        Group = "${config.ghaf.users.services.netUser}";
         # Restart the service if it fails
         Restart = "on-failure";
         # Wait a second before restarting.
