@@ -46,6 +46,8 @@ in
         };
       };
 
+      virtualization.microvm.netvm.vmNetworking.interfaceName = builtins.trace "hello" "enesNic";
+
       reference = {
         appvms.enable = true;
 
