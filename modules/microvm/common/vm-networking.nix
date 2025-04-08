@@ -45,17 +45,22 @@ in
       }
     ];
 
-    networking = {
-      hostName = cfg.vmName;
-      enableIPv6 = false;
-      firewall.allowedTCPPorts = [ 22 ];
-      firewall.allowedUDPPorts = [ 67 ];
-      useNetworkd = true;
-      nat = {
-        enable = true;
-        internalInterfaces = [ cfg.interfaceName ];
+    networking =
+      let
+
+        tracedInterface = builtins.trace "vmNetworking: ${builtins.toJSON cfg.interfaceName}" cfg.interfaceName;
+      in
+      {
+        hostName = cfg.vmName;
+        enableIPv6 = false;
+        firewall.allowedTCPPorts = [ 22 ];
+        firewall.allowedUDPPorts = [ 67 ];
+        useNetworkd = true;
+        nat = {
+          enable = true;
+          internalInterfaces = [ tracedInterface ];
+        };
       };
-    };
 
     microvm.interfaces = [
       {

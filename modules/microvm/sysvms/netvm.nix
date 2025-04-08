@@ -57,13 +57,6 @@ let
               directories = [ "/etc/NetworkManager/system-connections/" ];
             };
 
-            # Networking
-            virtualization.microvm.vm-networking = {
-              enable = true;
-              isGateway = true;
-              inherit vmName;
-            };
-
             # Services
             logging.client.enable = config.ghaf.logging.enable;
           };
@@ -139,6 +132,26 @@ in
       '';
       default = [ ];
     };
+    vmNetworking = lib.mkOption {
+      type = lib.types.submodule {
+        options = {
+          isGateway = lib.mkEnableOption {
+            description = "Make this VM act as a gateway";
+            default = true;
+          };
+          interfaceName = lib.mkOption {
+            type = lib.types.str;
+            default = "ethint0";
+            description = "Name of the internal network interface.";
+          };
+        };
+      };
+      default = { };
+      description = ''
+        Extra configuration passed to virtualization.microvm.vm-networking.
+        Allows customizing internal networking (e.g., isGateway, interfaceName).
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -148,7 +161,14 @@ in
       inherit (inputs) nixpkgs;
       config = netvmBaseConfiguration // {
         imports = netvmBaseConfiguration.imports ++ cfg.extraModules;
+        # Networking
+        ghaf.virtualization.microvm.vm-networking = {
+          enable = true;
+          inherit vmName;
+        } // cfg.vmNetworking;
+
       };
+
     };
   };
 }
