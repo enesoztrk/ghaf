@@ -35,6 +35,17 @@ in
         "chrome-vm"
       ];
 
+      # networking.extraHosts = lib.mkForce {
+
+      #   chrome-vm = {
+      #     name = "chrome-vm";
+      #     ipv4 = builtins.trace "host---" lib.mkForce "192.168.100.1";
+      #     mac = "02:00:00:00:00:01";
+      #     ipv6 = "2001:db8::1";
+      #     cid = 8;
+      #   };
+
+      # };
       virtualization.microvm.appvm = {
         enable = true;
         vms = {
@@ -46,7 +57,7 @@ in
         };
       };
 
-      virtualization.microvm.netvm.vmNetworking.interfaceName = builtins.trace "hello" "enesNic";
+      virtualization.microvm.netvm.networking.interfaceName = builtins.trace "hello" "enesNic";
 
       reference = {
         appvms.enable = true;
