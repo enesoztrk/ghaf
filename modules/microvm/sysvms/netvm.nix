@@ -132,7 +132,7 @@ in
       '';
       default = [ ];
     };
-    vmNetworking = lib.mkOption {
+    networking = lib.mkOption {
       type = lib.types.submodule {
         options = {
           isGateway = lib.mkEnableOption {
@@ -148,27 +148,29 @@ in
       };
       default = { };
       description = ''
-        Extra configuration passed to virtualization.microvm.vm-networking.
-        Allows customizing internal networking (e.g., isGateway, interfaceName).
+        Extra configuration passed to netvm networking config.
       '';
     };
   };
 
   config = lib.mkIf cfg.enable {
-    microvm.vms."${vmName}" = {
-      autostart = true;
-      restartIfChanged = false;
-      inherit (inputs) nixpkgs;
-      config = netvmBaseConfiguration // {
-        imports = netvmBaseConfiguration.imports ++ cfg.extraModules;
-        # Networking
-        ghaf.virtualization.microvm.vm-networking = {
-          enable = true;
-          inherit vmName;
-        } // cfg.vmNetworking;
+    microvm.vms = {
+
+      "${vmName}" = {
+        autostart = true;
+        restartIfChanged = false;
+        inherit (inputs) nixpkgs;
+        config = netvmBaseConfiguration // {
+          imports = netvmBaseConfiguration.imports ++ cfg.extraModules;
+          # Networking
+          ghaf.virtualization.microvm.vm-networking = {
+            enable = true;
+            inherit vmName;
+          } // cfg.networking;
+
+        };
 
       };
-
     };
   };
 }

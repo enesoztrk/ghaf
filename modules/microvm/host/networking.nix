@@ -10,7 +10,9 @@ let
   cfg = config.ghaf.host.networking;
   inherit (lib)
     mkEnableOption
+    mkOption
     mkIf
+    types
     optionals
     ;
   sshKeysHelper = pkgs.callPackage ../common/ssh-keys-helper.nix { inherit config; };
@@ -20,36 +22,44 @@ in
 {
   options.ghaf.host.networking = {
     enable = mkEnableOption "Host networking";
-    # TODO add options to configure the network, e.g. ip addr etc
+    bridgeName = mkOption {
+      type = lib.types.str;
+      description = "Name of the bridge interface.";
+      default = "virbr0";
+    };
   };
 
   config = mkIf cfg.enable {
     networking = {
       enableIPv6 = false;
       useNetworkd = true;
-      interfaces.virbr0.useDHCP = false;
+      interfaces."${cfg.bridgeName}".useDHCP = false;
     };
 
     # TODO Remove host networking
-    systemd.network = {
-      netdevs."10-virbr0".netdevConfig = {
-        Kind = "bridge";
-        Name = "virbr0";
-        #      MACAddress = "02:00:00:02:02:02";
+    systemd.network =
+      let
+        tracedInterface = builtins.trace "HostNW: ${builtins.toJSON cfg.bridgeName}" cfg.bridgeName;
+      in
+      {
+        netdevs."10-${cfg.bridgeName}".netdevConfig = {
+          Kind = "bridge";
+          Name = tracedInterface;
+          #      MACAddress = "02:00:00:02:02:02";
+        };
+        networks."10-${cfg.bridgeName}" = {
+          matchConfig.Name = cfg.bridgeName;
+          networkConfig.DHCPServer = false;
+          addresses = [ { Address = "${hosts.${hostName}.ipv4}/24"; } ];
+          gateway = optionals (builtins.hasAttr "net-vm" config.microvm.vms) [ "${hosts."net-vm".ipv4}" ];
+        };
+        # Connect VM tun/tap device to the bridge
+        # TODO configure this based on IF the netvm is enabled
+        networks."11-netvm" = {
+          matchConfig.Name = "tap-*";
+          networkConfig.Bridge = cfg.bridgeName;
+        };
       };
-      networks."10-virbr0" = {
-        matchConfig.Name = "virbr0";
-        networkConfig.DHCPServer = false;
-        addresses = [ { Address = "${hosts.${hostName}.ipv4}/24"; } ];
-        gateway = optionals (builtins.hasAttr "net-vm" config.microvm.vms) [ "${hosts."net-vm".ipv4}" ];
-      };
-      # Connect VM tun/tap device to the bridge
-      # TODO configure this based on IF the netvm is enabled
-      networks."11-netvm" = {
-        matchConfig.Name = "tap-*";
-        networkConfig.Bridge = "virbr0";
-      };
-    };
 
     environment.etc = {
       ${config.ghaf.security.sshKeys.getAuthKeysFilePathInEtc} = sshKeysHelper.getAuthKeysSource;
