@@ -136,5 +136,18 @@ in
         imports = adminvmBaseConfiguration.imports ++ cfg.extraModules;
       };
     };
+
+    ghaf.common.extraNetworking.hosts = {
+
+      admin-vm = {
+        # name = "chrome-vm";
+        ipv4 = builtins.trace "admin-vm ip change:" "192.168.100.120";
+        # mac = "02:00:00:00:00:01";
+        # ipv6 = "2001:db8::1";
+        # cid = 8;
+      };
+
+    };
+
   };
 }

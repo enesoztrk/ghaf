@@ -15,6 +15,34 @@ let
     optionalAttrs
     hasAttrByPath
     ;
+  # Internal network host entry
+  hostEntrySubmodule = types.submodule {
+    options = {
+      name = mkOption {
+        type = types.nullOr types.str;
+        description = "Host name as string.";
+        default = null;
+      };
+      mac = mkOption {
+        type = types.nullOr types.str;
+        description = "MAC address as string.";
+        default = null;
+
+      };
+      ipv4 = mkOption {
+        type = types.nullOr types.str;
+        description = "IPv4 address as string.";
+        default = null;
+
+      };
+      ipv6 = mkOption {
+        type = types.nullOr types.str;
+        description = "IPv6 address as string.";
+        default = null;
+
+      };
+    };
+  };
 in
 {
   imports = [
@@ -43,6 +71,13 @@ in
         default = [ ];
         description = "List of app hosts currently enabled.";
       };
+      extraNetworking = {
+        hosts = mkOption {
+          type = types.attrsOf hostEntrySubmodule;
+          description = "Extra host entries that override or extend the generated ones.";
+          default = { };
+        };
+      };
       hardware = {
         nics = mkOption {
           type = types.listOf types.attrs;
@@ -69,8 +104,8 @@ in
         "app-vm"
       ];
     };
-  };
 
+  };
   config = {
 
     # Populate the shared namespace

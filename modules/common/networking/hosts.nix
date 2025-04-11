@@ -16,27 +16,41 @@ let
     ;
 
   # Internal network host entry
+  # TODO Add sockets
   hostEntrySubmodule = types.submodule {
     options = {
       name = mkOption {
         type = types.str;
-        description = "Host name as string.";
+        description = ''
+          Host name as string.
+        '';
       };
       mac = mkOption {
         type = types.str;
-        description = "MAC address as string.";
+        description = ''
+          MAC address as string.
+        '';
       };
       ipv4 = mkOption {
         type = types.str;
-        description = "IPv4 address as string.";
+        description = ''
+          IPv4 address as string.
+        '';
       };
       ipv6 = mkOption {
         type = types.str;
-        description = "IPv6 address as string.";
+        description = ''
+          IPv6 address as string.
+        '';
       };
       cid = mkOption {
         type = types.int;
-        description = "Vsock CID (Context IDentifier) as integer.";
+        description = ''
+          Vsock CID (Context IDentifier) as integer:
+          - VMADDR_CID_HYPERVISOR (0) is reserved for services built into the hypervisor
+          - VMADDR_CID_LOCAL (1) is the well-known address for local communication (loopback)
+          - VMADDR_CID_HOST (2) is the well-known address of the host
+        '';
       };
     };
   };
@@ -77,9 +91,29 @@ let
 
   # Evaluate generated hosts as attrset
   generatedHostAttrs = listToAttrs (map (host: nameValuePair host.name host) generatedHosts);
-  combinedHosts =
-    generatedHostAttrs
-    // builtins.trace "extraHosts: ${builtins.toJSON config.ghaf.networking.extraHosts}" config.ghaf.networking.extraHosts;
+  # Extract names of all extra hosts
+  extraHostNames = lib.attrNames config.ghaf.common.extraNetworking.hosts;
+
+  # Merge logic per host
+  mergedExtraHosts = listToAttrs (
+    map (
+      name:
+      let
+        gen = generatedHostAttrs.${name};
+        extra = config.ghaf.common.extraNetworking.hosts.${name};
+      in
+      nameValuePair name {
+        inherit name;
+        mac = if extra ? mac && extra.mac != null then extra.mac else gen.mac;
+        ipv4 = if extra ? ipv4 && extra.ipv4 != null then extra.ipv4 else gen.ipv4;
+        ipv6 = if extra ? ipv6 && extra.ipv6 != null then extra.ipv6 else gen.ipv6;
+        inherit (gen) cid;
+      }
+    ) extraHostNames
+  );
+
+  # Combine generated and extra hosts (extra overrides or extends)
+  combinedHosts = generatedHostAttrs // mergedExtraHosts;
 
   # Trace
   tracedCombinedHosts = builtins.trace "ghaf.networking.hosts (merged): ${builtins.toJSON combinedHosts}" combinedHosts;
@@ -91,7 +125,47 @@ let
     }) (lib.attrValues combinedHosts)
   );
   tracedNetworkingHosts = builtins.trace "networking.hosts (JSON): ${builtins.toJSON networkingHosts}" networkingHosts;
+  # Extract values to check for uniqueness
+  allHosts = lib.attrValues combinedHosts;
+  getField = field: map (h: h.${field}) allHosts;
 
+  checkUnique =
+    field:
+    let
+      values = builtins.trace "Values: ${builtins.toJSON (getField field)}" (getField field);
+      unique = lib.lists.unique values;
+
+      # Find duplicates by filtering values that occur more than once
+      duplicates = lib.lists.filter (
+        value: lib.lists.length (lib.lists.filter (x: x == value) values) > 1
+      ) unique;
+
+      # Create a list of duplicates with the corresponding host names
+      duplicateNames = lib.lists.filter (
+        host: lib.lists.length (lib.lists.filter (x: x == host.${field}) values) > 1
+      ) allHosts;
+
+    in
+    {
+      inherit field;
+      ok = values == unique;
+      inherit duplicates;
+      duplicateNames = map (host: host.name) duplicateNames; # Extract host names for duplicates
+    };
+
+  uniquenessChecks = map checkUnique [
+    "mac"
+    "ipv4"
+    "ipv6"
+    "cid"
+    "name"
+  ];
+
+  uniquenessAssertions = map (check: {
+    assertion = check.ok;
+    message = "Duplicate ${check.field} values detected: ${lib.concatStringsSep ", " check.duplicates}, conflict between:${lib.concatStringsSep ", " check.duplicateNames}";
+
+  }) uniquenessChecks;
 in
 {
   options.ghaf.networking = {
@@ -101,11 +175,6 @@ in
       default = { };
     };
 
-    extraHosts = mkOption {
-      type = types.attrsOf hostEntrySubmodule;
-      description = "Extra host entries that override or extend the generated ones.";
-      default = { };
-    };
   };
 
   config = {
@@ -114,7 +183,7 @@ in
         assertion = lib.length config.ghaf.common.vms < 255;
         message = "Too many VMs defined - maximum is 254";
       }
-    ];
+    ] ++ uniquenessAssertions;
 
     ghaf.networking.hosts = tracedCombinedHosts;
 
