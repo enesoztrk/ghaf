@@ -162,9 +162,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    microvm.vms = {
+    microvm = {
 
-      "${vmName}" = {
+      vms."${vmName}" = {
         autostart = true;
         restartIfChanged = false;
         inherit (inputs) nixpkgs;
@@ -180,5 +180,18 @@ in
 
       };
     };
+
+    ghaf.common.extraNetworking.hosts = {
+
+      chrome-vm = {
+        name = "chrome-vm";
+        ipv4 = builtins.trace "host---" "192.168.100.105";
+        # mac = "02:00:00:00:00:01";
+        # ipv6 = "2001:db8::1";
+        # cid = 8;
+      };
+
+    };
+
   };
 }
