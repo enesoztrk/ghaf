@@ -12,7 +12,6 @@ let
     mkEnableOption
     mkOption
     mkIf
-    types
     optionals
     ;
   sshKeysHelper = pkgs.callPackage ../common/ssh-keys-helper.nix { inherit config; };
@@ -22,42 +21,46 @@ in
 {
   options.ghaf.host.networking = {
     enable = mkEnableOption "Host networking";
-    bridgeName = mkOption {
+    bridgeNicName = mkOption {
+      description = "Name of the internal interface";
       type = lib.types.str;
-      description = "Name of the bridge interface.";
       default = "virbr0";
     };
   };
 
   config = mkIf cfg.enable {
+
     networking = {
       enableIPv6 = false;
       useNetworkd = true;
-      interfaces."${cfg.bridgeName}".useDHCP = false;
+      interfaces."${cfg.bridgeNicName}".useDHCP = false;
+      hostName = "ghaf-host";
     };
 
     # TODO Remove host networking
     systemd.network =
       let
-        tracedInterface = builtins.trace "HostNW: ${builtins.toJSON cfg.bridgeName}" cfg.bridgeName;
+        tracedInterface = builtins.trace "HostNW: ${builtins.toJSON cfg.bridgeNicName}" cfg.bridgeNicName;
       in
       {
-        netdevs."10-${cfg.bridgeName}".netdevConfig = {
+        netdevs."10-${cfg.bridgeNicName}".netdevConfig = {
           Kind = "bridge";
           Name = tracedInterface;
           #      MACAddress = "02:00:00:02:02:02";
         };
-        networks."10-${cfg.bridgeName}" = {
-          matchConfig.Name = cfg.bridgeName;
+        networks."10-${cfg.bridgeNicName}" = {
+          matchConfig.Name = cfg.bridgeNicName;
           networkConfig.DHCPServer = false;
-          addresses = [ { Address = "${hosts.${hostName}.ipv4}/24"; } ];
+          addresses = [
+            { Address = "${hosts.${hostName}.ipv4}/${toString hosts.${hostName}.ipv4SubnetPrefixLength}"; }
+          ];
           gateway = optionals (builtins.hasAttr "net-vm" config.microvm.vms) [ "${hosts."net-vm".ipv4}" ];
         };
         # Connect VM tun/tap device to the bridge
         # TODO configure this based on IF the netvm is enabled
         networks."11-netvm" = {
           matchConfig.Name = "tap-*";
-          networkConfig.Bridge = cfg.bridgeName;
+          networkConfig.Bridge = cfg.bridgeNicName;
         };
       };
 

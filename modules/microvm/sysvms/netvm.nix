@@ -132,56 +132,41 @@ in
       '';
       default = [ ];
     };
-    networking = lib.mkOption {
-      type = lib.types.submodule {
-        options = {
-          isGateway = lib.mkEnableOption {
-            description = "Make this VM act as a gateway";
-            default = true;
-          };
-          interfaceName = lib.mkOption {
-            type = lib.types.str;
-            default = "ethint0";
-            description = "Name of the internal network interface.";
-          };
-        };
-      };
+    extraNetworking = lib.mkOption {
+      type =
+        let
+          extraNetworkingType = import ../../common/networking/common_types.nix { inherit lib; };
+        in
+        extraNetworkingType;
+      description = "Extra Networking option";
       default = { };
-      description = ''
-        Extra configuration passed to netvm networking config.
-      '';
     };
   };
 
   config = lib.mkIf cfg.enable {
-    microvm = {
 
-      vms."${vmName}" = {
-        autostart = true;
-        restartIfChanged = false;
-        inherit (inputs) nixpkgs;
-        config = netvmBaseConfiguration // {
-          imports = netvmBaseConfiguration.imports ++ cfg.extraModules;
-          # Networking
-          ghaf.virtualization.microvm.vm-networking = {
+    ghaf.common.extraNetworking.hosts.net-vm = cfg.extraNetworking;
+
+    microvm.vms."${vmName}" = {
+      autostart = true;
+      restartIfChanged = false;
+      inherit (inputs) nixpkgs;
+      config = netvmBaseConfiguration // {
+        imports = netvmBaseConfiguration.imports ++ cfg.extraModules;
+        # Networking
+        ghaf.virtualization.microvm.vm-networking =
+          {
             enable = true;
+            isGateway = true;
             inherit vmName;
-          } // cfg.networking;
+          }
+          // lib.optionalAttrs ((cfg.extraNetworking.interfaceName or null) != null) {
+            inherit (cfg.extraNetworking) interfaceName;
+          };
 
-        };
-
-      };
-    };
-    ghaf.common.extraNetworking.hosts = {
-
-      net-vm = {
-        # name = "chrome-vm";
-        ipv4 = builtins.trace "net-vm ip change:" "192.168.100.115";
-        # mac = "02:00:00:00:00:01";
-        # ipv6 = "2001:db8::1";
-        # cid = 8;
       };
 
     };
+
   };
 }

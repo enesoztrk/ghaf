@@ -30,16 +30,31 @@ in
       virtualization.microvm.appvm = {
         enable = true;
         vms = {
-          chrome.enable = true;
-          gala.enable = true;
+          chrome = {
+            enable = true;
+            extraNetworking = {
+              ipv4 = "192.168.100.250";
+              interfaceName = "chromeNic";
+            };
+          };
+          gala = {
+            enable = true;
+            extraNetworking = {
+              ipv4 = "192.168.100.251";
+              interfaceName = "galaNic";
+              mac = "DE:AD:BE:EF:00:01";
+            };
+          };
           zathura.enable = true;
           comms.enable = true;
           business.enable = true;
         };
       };
 
-      virtualization.microvm.netvm.networking.interfaceName = builtins.trace "hello" "enesNic";
-
+      virtualization.microvm.netvm.extraNetworking = {
+        interfaceName = builtins.trace "hello" "enesNic";
+        ipv4 = "192.168.100.200";
+      };
       reference = {
         appvms.enable = true;
 

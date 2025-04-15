@@ -55,12 +55,6 @@ let
               ];
             };
 
-            # Networking
-            virtualization.microvm.vm-networking = {
-              enable = true;
-              inherit vmName;
-            };
-
             # Services
             logging = {
               server = {
@@ -126,28 +120,35 @@ in
       '';
       default = [ ];
     };
+    extraNetworking = lib.mkOption {
+      type =
+        let
+          extraNetworkingType = import ../../common/networking/common_types.nix { inherit lib; };
+        in
+        extraNetworkingType;
+      description = "Extra Networking option";
+      default = { };
+    };
   };
 
   config = lib.mkIf cfg.enable {
+
+    ghaf.common.extraNetworking.hosts.admin-vm = cfg.extraNetworking;
     microvm.vms."${vmName}" = {
       autostart = true;
       inherit (inputs) nixpkgs;
       config = adminvmBaseConfiguration // {
         imports = adminvmBaseConfiguration.imports ++ cfg.extraModules;
+        # Networking
+        ghaf.virtualization.microvm.vm-networking =
+          {
+            enable = true;
+            inherit vmName;
+          }
+          // lib.optionalAttrs ((cfg.extraNetworking.interfaceName or null) != null) {
+            inherit (cfg.extraNetworking) interfaceName;
+          };
       };
     };
-
-    ghaf.common.extraNetworking.hosts = {
-
-      admin-vm = {
-        # name = "chrome-vm";
-        ipv4 = builtins.trace "admin-vm ip change:" "192.168.100.120";
-        # mac = "02:00:00:00:00:01";
-        # ipv6 = "2001:db8::1";
-        # cid = 8;
-      };
-
-    };
-
   };
 }

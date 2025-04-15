@@ -43,6 +43,12 @@ let
           IPv6 address as string.
         '';
       };
+      ipv4SubnetPrefixLength = mkOption {
+        type = types.int;
+        default = 24;
+        description = "The IPv4 subnet prefix length (e.g. 24 for 255.255.255.0)";
+        example = 24;
+      };
       cid = mkOption {
         type = types.int;
         description = ''
@@ -74,6 +80,7 @@ let
       ipv4 = "${ipv4BaseAddress}${toString idx}";
       ipv6 = "${ipv6BaseAddress}${toString idx}";
       cid = if name == "net-vm" then (length hostList) + 1 else idx;
+      ipv4SubnetPrefixLength = 24;
     }) hostList
     ++ lib.lists.imap1 (
       index: name:
@@ -86,6 +93,7 @@ let
         ipv4 = "${ipv4BaseAddress}${toString idx}";
         ipv6 = "${ipv6BaseAddress}${toString idx}";
         cid = idx;
+        ipv4SubnetPrefixLength = 24;
       }
     ) config.ghaf.common.appHosts;
 
@@ -107,6 +115,12 @@ let
         mac = if extra ? mac && extra.mac != null then extra.mac else gen.mac;
         ipv4 = if extra ? ipv4 && extra.ipv4 != null then extra.ipv4 else gen.ipv4;
         ipv6 = if extra ? ipv6 && extra.ipv6 != null then extra.ipv6 else gen.ipv6;
+        ipv4SubnetPrefixLength =
+          if extra ? ipv4SubnetPrefixLength && extra.ipv4SubnetPrefixLength != null then
+            extra.ipv4SubnetPrefixLength
+          else
+            gen.ipv4SubnetPrefixLength;
+
         inherit (gen) cid;
       }
     ) extraHostNames
@@ -116,8 +130,8 @@ let
   combinedHosts = generatedHostAttrs // mergedExtraHosts;
 
   # Trace
-  tracedCombinedHosts = builtins.trace "ghaf.networking.hosts (merged): ${builtins.toJSON combinedHosts}" combinedHosts;
-
+  #tracedCombinedHosts = builtins.trace "ghaf.networking.hosts (merged): ${builtins.toJSON combinedHosts}" combinedHosts;
+  tracedCombinedHosts = combinedHosts;
   # networking.hosts derived from merged host entries
   networkingHosts = foldr recursiveUpdate { } (
     map (host: {
@@ -132,7 +146,8 @@ let
   checkUnique =
     field:
     let
-      values = builtins.trace "Values: ${builtins.toJSON (getField field)}" (getField field);
+      # values = builtins.trace "Values: ${builtins.toJSON (getField field)}" (getField field);
+      values = getField field;
       unique = lib.lists.unique values;
 
       # Find duplicates by filtering values that occur more than once

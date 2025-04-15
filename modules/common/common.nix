@@ -15,34 +15,8 @@ let
     optionalAttrs
     hasAttrByPath
     ;
-  # Internal network host entry
-  hostEntrySubmodule = types.submodule {
-    options = {
-      name = mkOption {
-        type = types.nullOr types.str;
-        description = "Host name as string.";
-        default = null;
-      };
-      mac = mkOption {
-        type = types.nullOr types.str;
-        description = "MAC address as string.";
-        default = null;
+  extraNetworkingType = import ./networking/common_types.nix { inherit lib; };
 
-      };
-      ipv4 = mkOption {
-        type = types.nullOr types.str;
-        description = "IPv4 address as string.";
-        default = null;
-
-      };
-      ipv6 = mkOption {
-        type = types.nullOr types.str;
-        description = "IPv6 address as string.";
-        default = null;
-
-      };
-    };
-  };
 in
 {
   imports = [
@@ -52,6 +26,7 @@ in
     # This line breaks build of GUIVM. No investigations of a
     # root cause are done so far.
     #(modulesPath + "/profiles/minimal.nix")
+
   ];
 
   options.ghaf = {
@@ -73,7 +48,7 @@ in
       };
       extraNetworking = {
         hosts = mkOption {
-          type = types.attrsOf hostEntrySubmodule;
+          type = types.attrsOf extraNetworkingType;
           description = "Extra host entries that override or extend the generated ones.";
           default = { };
         };

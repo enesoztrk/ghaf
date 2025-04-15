@@ -81,7 +81,7 @@ in
 
       host = {
         networking.enable = true;
-        networking.bridgeName = "fog-lan";
+        networking.bridgeNicName = "fog-lan";
       };
     };
   };
