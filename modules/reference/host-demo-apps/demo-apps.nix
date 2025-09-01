@@ -57,7 +57,7 @@ in
       ++ lib.optional cfg.element-desktop {
         name = "Element";
         description = "General Messaging Application";
-        path = "${pkgs.element-desktop}/bin/element-desktop --enable-features=UseOzonePlatform --ozone-platform=wayland";
+        path = "${pkgs.element-desktop}/bin/element-desktop --disable-gpu --password-store=\"basic\" ";
         icon = "element-desktop";
       }
       ++ lib.optional cfg.gala {

@@ -6,7 +6,7 @@
     bt-launcher = final.callPackage ./pkgs-by-name/bt-launcher/package.nix { };
     dendrite-pinecone = final.callPackage ./pkgs-by-name/dendrite-pinecone/package.nix { };
     element-gps = final.python3Packages.callPackage ./python-packages/element-gps/package.nix { };
-    element-web = final.callPackage ./pkgs-by-name/element-web/package.nix { };
+    #element-web = final.callPackage ./pkgs-by-name/element-web/package.nix { };
     falcon-launcher = final.callPackage ./falcon-launcher/package.nix { };
     flash-script = final.callPackage ./pkgs-by-name/flash-script/package.nix { };
     gala = final.callPackage ./pkgs-by-name/gala/package.nix { };

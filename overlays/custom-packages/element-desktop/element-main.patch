@@ -1,24 +1,13 @@
-From 5b5e4c29bd3357960db71a5dab139e22c596c7f1 Mon Sep 17 00:00:00 2001
-From: Brian McGillion <bmg.avoin@gmail.com>
-Date: Mon, 16 Jun 2025 08:20:38 +0400
-Subject: [PATCH] tray-icon: Remove tray-icon
-
-Not supported on ghaf. Needs to be tested if still applicable.
-
-Signed-off-by: Brian McGillion <bmg.avoin@gmail.com>
----
- src/electron-main.ts | 71 +++++---------------------------------------
- 1 file changed, 7 insertions(+), 64 deletions(-)
-
 diff --git a/src/electron-main.ts b/src/electron-main.ts
-index a00166c..63b3762 100644
+index a00166c..57bb117 100644
 --- a/src/electron-main.ts
 +++ b/src/electron-main.ts
-@@ -473,11 +473,10 @@ app.on("ready", async () => {
+@@ -473,11 +473,11 @@ app.on("ready", async () => {
          // https://www.electronjs.org/docs/faq#the-font-looks-blurry-what-is-this-and-what-can-i-do
          backgroundColor: "#fff",
  
 -        titleBarStyle: process.platform === "darwin" ? "hidden" : "default",
++       // titleBarStyle: process.platform === "darwin" ? "hidden" : "default",
          trafficLightPosition: { x: 9, y: 8 },
  
          icon: global.trayConfig.icon_path,
@@ -27,7 +16,7 @@ index a00166c..63b3762 100644
          autoHideMenuBar: store.get("autoHideMenuBar"),
  
          x: mainWindowState.x,
-@@ -492,91 +491,35 @@ app.on("ready", async () => {
+@@ -492,90 +492,38 @@ app.on("ready", async () => {
              webgl: true,
          },
      });
@@ -36,14 +25,16 @@ index a00166c..63b3762 100644
 -    if (process.platform === "darwin") {
 -        setupMacosTitleBar(global.mainWindow);
 -    }
++  
  
      // Handle spellchecker
      // For some reason spellCheckerEnabled isn't persisted, so we have to use the store here
      global.mainWindow.webContents.session.setSpellCheckerEnabled(store.get("spellCheckerEnabled", true));
  
--    // Create trayIcon icon
+     // Create trayIcon icon
 -    if (store.get("minimizeToTray")) tray.create(global.trayConfig);
--
++    //if (store.get("minimizeToTray")) tray.create(global.trayConfig);
+ 
 -    global.mainWindow.once("ready-to-show", () => {
 +    global.mainWindow.webContents.once('did-finish-load',function() {
          if (!global.mainWindow) return;
@@ -51,7 +42,7 @@ index a00166c..63b3762 100644
  
          if (!argv["hidden"]) {
              global.mainWindow.show();
-+            global.mainWindow.restore();
++             global.mainWindow.restore();
 +            global.mainWindow.focus();
          } else {
              // hide here explicitly because window manage above sometimes shows it
@@ -84,7 +75,7 @@ index a00166c..63b3762 100644
 -            }
 -        }
 -    });
-+    global.mainWindow.loadURL("vector://vector/webapp/");
++ global.mainWindow.loadURL("vector://vector/webapp/");
  
      global.mainWindow.on("closed", () => {
          global.mainWindow = null;
@@ -107,8 +98,6 @@ index a00166c..63b3762 100644
 -
 -            return false;
 -        }
-+       // Close event handler
-+       // Default behaviour is minimize to tray, that feature is removed since there is no tray support on Ghaf
      });
  
 -    if (process.platform === "win32") {
@@ -121,9 +110,7 @@ index a00166c..63b3762 100644
 -            }
 -        });
 -    }
--
++
+ 
      webContentsHandler(global.mainWindow.webContents);
  
-     session.defaultSession.setDisplayMediaRequestHandler((_, callback) => {
--- 
-2.49.0
