@@ -39,6 +39,25 @@ let
       rm "$file"
     '';
   };
+
+  # A script for opening url launched by GIVC from AppVMs
+  xdgOpenUrl = pkgs.writeShellApplication {
+    name = "xdgopenurl";
+    runtimeInputs = [
+      pkgs.coreutils
+    ];
+    text = ''
+      #!${pkgs.runtimeShell}
+      url="$1"
+      if [[ -z "$url" ]]; then
+        echo "No URL provided - xdg handlers"
+        exit 1
+      fi
+      echo "XDG open url: $url"
+      ${config.ghaf.givc.appPrefix}/run-waypipe ${config.ghaf.givc.appPrefix}/google-chrome-stable --enable-features=UseOzonePlatform --ozone-platform=wayland "$url"
+    '';
+  };
+
 in
 {
   options.ghaf.xdghandlers = {
@@ -50,6 +69,7 @@ in
     environment.systemPackages = with pkgs; [
       zathura
       oculante
+      google-chrome
     ];
 
     # Set up GIVC applications for XDG scripts
@@ -60,11 +80,17 @@ in
         args = [ "file" ];
         directories = [ "/run/xdg/pdf" ];
       }
+
       {
         name = "xdg-image";
         command = "${xdgOpenImage}/bin/xdgopenimage";
         args = [ "file" ];
         directories = [ "/run/xdg/image" ];
+      }
+      {
+        name = "xdg-url";
+        command = "${xdgOpenUrl}/bin/xdgopenurl";
+        args = [ "url" ];
       }
     ];
 

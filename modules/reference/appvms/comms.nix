@@ -26,12 +26,13 @@ in
         description = "General Messaging Application";
         packages = [ pkgs.element-desktop ];
         icon = "element-desktop";
-        command = "element-desktop --enable-logging --password-store=\"basic\" --disable-gpu --config /etc/element-cfg/config.json  --profile-dir /home/appuser/element-cfg/profile --enable-features=UseOzonePlatform --ozone-platform=wayland";
+        command = "element-desktop --enable-logging --password-store=\"gnome-libsecret\" --disable-gpu --enable-features=UseOzonePlatform --ozone-platform=wayland";
         extraModules = [
           {
             imports = [
               ../programs/element-desktop.nix
             ];
+            services.gnome.gnome-keyring.enable = true;
             ghaf.reference.programs.element-desktop.enable = true;
           }
         ];

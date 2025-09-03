@@ -30,11 +30,13 @@ let
         if cfg.serverSocketPath != null then
           ''
             #!${pkgs.runtimeShell} -e
+            set -x  # enable shell debug tracing
             ${pkgs.waypipe}/bin/waypipe -s ${cfg.serverSocketPath} server "$@"
           ''
         else
           ''
             #!${pkgs.runtimeShell} -e
+            set -x  # enable shell debug tracing
             ${pkgs.waypipe}/bin/waypipe --vsock -s ${toString waypipePort} server "$@"
           '';
     in

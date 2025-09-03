@@ -22,7 +22,7 @@ in
   ];
 
   config = lib.mkIf cfg.enable {
-    security.apparmor.enable = true;
+    security.apparmor.enable = builtins.trace "apparmor" true;
     security.apparmor.killUnconfinedConfinables = lib.mkDefault true;
     services.dbus.apparmor = "enabled";
   };

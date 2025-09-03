@@ -81,6 +81,20 @@ let
     noDisplay = true;
   };
 
+  # XDG item for URL
+  xdgUrlItem = pkgs.makeDesktopItem {
+    name = "ghaf-url-xdg";
+    desktopName = "Ghaf URL Opener";
+    icon = "web-browser";
+    exec = "${xdgOpenFile}/bin/xdgopenfile url %u";
+    mimeTypes = [
+      "text/html"
+      "x-scheme-handler/http"
+      "x-scheme-handler/https"
+    ];
+    noDisplay = true;
+  };
+
   # The XDG open script is used by XDG items to copy the file
   # to the shared location (e.g., /run/xdg/pdf/chrome-vm) and
   # start the application in the VM responsible for that file type
@@ -93,6 +107,12 @@ let
     text = ''
       type=$1
       file=$2
+      if [[ "$type" == "url" ]]; then
+        echo "Url  type in the XDF open script"
+        ${pkgs.givc-cli}/bin/givc-cli ${config.ghaf.givc.cliArgs} start app --vm zathura-vm "xdg-$type" -- "$file"
+        exit 0
+      fi
+
       filename=$(basename "$file")
       filepath=$(realpath "$file")
       if [[ -z "$filepath" ]]; then
@@ -148,7 +168,9 @@ in
       pkgs.xdg-utils
       xdgPdfItem
       xdgImageItem
+      xdgUrlItem
       xdgOpenFile
+      # xdgOpenUrl
     ];
 
     # Set up XDG items for each supported MIME type
@@ -156,6 +178,9 @@ in
       setDefaultAppForTypes supportedImageMimeTypes "ghaf-image-xdg.desktop"
       // {
         "application/pdf" = "ghaf-pdf-xdg.desktop";
+        "text/html" = "ghaf-url-xdg.desktop";
+        "x-scheme-handler/http" = "ghaf-url-xdg.desktop";
+        "x-scheme-handler/https" = "ghaf-url-xdg.desktop";
       };
 
     # Set up MicroVM shares for each MIME type and mount them to /run/xdg
