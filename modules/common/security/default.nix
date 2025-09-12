@@ -7,5 +7,6 @@
     ./audit
     ./pwquality.nix
     ./ssh-tarpit
+    ./fail2ban.nix
   ];
 }

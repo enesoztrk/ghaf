@@ -11,6 +11,7 @@ let
     mkIf
     mkEnableOption
     optionals
+    mkForce
     ;
   tarpitListenPort = 2222;
   tarpitFwMarkNum = "70";
@@ -35,6 +36,10 @@ in
         assertion = !(lib.elem tarpitListenPort config.services.openssh.ports);
         message = "Ssh listening ports and ssh-tarpit listening port must be different";
       }
+      {
+        assertion = config.ghaf.security.fail2ban.enable;
+        message = "Fail2ban must be enabled to activate ssh-tarpit module";
+      }
     ];
     services.endlessh-go = {
       enable = true;
@@ -49,17 +54,14 @@ in
       StartLimitBurst = 10;
       StartLimitIntervalSec = 60;
     };
+
+    ghaf.security.fail2ban = {
+      banaction = mkForce "iptables-ipset-mark";
+      fwMarkNum = mkForce "${tarpitFwMarkNum}";
+    };
+
     ghaf.firewall = {
       enable = lib.mkForce true;
-      tcpBlacklistRules = [
-        {
-          port = sshPort;
-          trackingSize = 50;
-          burstNum = 5;
-          maxPacketFreq = "20/minute";
-          fwMarkNum = tarpitFwMarkNum;
-        }
-      ];
       extra = {
         prerouting = {
           nat = [
