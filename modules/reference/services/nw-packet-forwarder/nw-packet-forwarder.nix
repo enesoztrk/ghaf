@@ -124,21 +124,22 @@ in
 
     systemd.services."nw-packet-forwarder" = {
       description = "Network packet forwarder daemon";
-      #  bindsTo = [ "sys-subsystem-net-devices-${cfg.bindingNic}.device" ];
-      #  after = [ "sys-subsystem-net-devices-${cfg.bindingNic}.device" ];
-      wantedBy = [ "multi-user.target" ];
-      #after = [ "network.target" ];
-      after = [ "network-online.target" ];
-      requires = [ "network-online.target" ];
 
+      bindsTo = [ "sys-subsystem-net-devices-${cfg.externalNic}.device" ];
+      after = [ "sys-subsystem-net-devices-${cfg.externalNic}.device" ];
+
+      wantedBy = [
+        "multi-user.target"
+        "sys-subsystem-net-devices-${cfg.externalNic}.device"
+      ];
       serviceConfig = {
         Type = "simple";
         ExecStart = "${pkgs.ghaf-nw-packet-forwarder}/bin/nw-pckt-fwd --external-iface ${cfg.externalNic} --internal-iface ${cfg.internalNic} --internal-ip ${cfg.internalIp} --chromecast=${toString cfg.chromecast.enable} --chromevm-mac ${chromevmMac} --chromevm-ip ${chromevmIpAddr}/24";
         User = "${nwPcktFwdUser}";
         # Restart the service if it fails
-        Restart = "on-failure";
+        Restart = "always";
         # Wait 5s before restarting.
-        RestartSec = "30s";
+        RestartSec = "15s";
         AmbientCapabilities = "CAP_NET_RAW CAP_NET_ADMIN";
         CapabilityBoundingSet = "CAP_NET_RAW CAP_NET_ADMIN";
         # PrivateTmp = true;
